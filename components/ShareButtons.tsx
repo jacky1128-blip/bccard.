@@ -1,23 +1,8 @@
 'use client';
-// 카카오톡·인스타·링크 복사
-// NEXT_PUBLIC_KAKAO_JS_KEY 가 있으면 카카오 JS SDK 로 카카오톡 공유, 없으면 링크 복사로 대신
-// (카카오 디벨로퍼스 > 앱 > 플랫폼 > Web 에 localhost:3000 과 서비스 도메인 등록 필요)
+// 공유는 "링크 복사" 하나로 (카톡·인스타 어디든 붙여 넣으면 됨). 2026-11-10 카카오톡·인스타 버튼 정리
 import { useState } from 'react';
-import Script from 'next/script';
 import { track } from '@/lib/analytics';
 import { btn } from './ui';
-
-const KAKAO_KEY = process.env.NEXT_PUBLIC_KAKAO_JS_KEY;
-const KAKAO_SDK = 'https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js';
-
-type KakaoSdk = {
-  isInitialized: () => boolean;
-  init: (key: string) => void;
-  Share: { sendDefault: (o: Record<string, unknown>) => void };
-};
-declare global {
-  interface Window { Kakao?: KakaoSdk }
-}
 
 // 공유 링크는 전부 우리 도메인 경유 (현재 페이지 주소)
 export function useCopy() {
@@ -45,48 +30,21 @@ export function useCopy() {
 
 const pageUrl = () => (typeof window === 'undefined' ? '' : window.location.href);
 
-function kakaoShare(url: string, title: string, text: string) {
-  const k = window.Kakao;
-  if (!KAKAO_KEY || !k) return false;
-  if (!k.isInitialized()) k.init(KAKAO_KEY);
-  k.Share.sendDefault({
-    objectType: 'text',
-    text: `${title}\n${text}`.slice(0, 200),
-    link: { mobileWebUrl: url, webUrl: url },
-    buttonTitle: '열어 보기',
-  });
-  return true;
-}
-
 export default function ShareButtons({
   url = pageUrl,
-  title = '같이 정해요',
-  text = '결제 데이터로 고른 후보예요',
+  label = '링크 복사',
 }: {
   url?: () => string;
-  title?: string;
+  label?: string;
+  title?: string; // (예전 카카오 공유용, 지금은 안 씀)
   text?: string;
 }) {
   const { copy, toast } = useCopy();
-  const cls = btn.mdOutline;
   return (
     <>
-      {KAKAO_KEY && <Script src={KAKAO_SDK} strategy="lazyOnload" crossOrigin="anonymous" />}
-      <div className="grid grid-cols-3 gap-2">
-        <button
-          type="button"
-          className={cls}
-          onClick={() => {
-            const link = url();
-            if (kakaoShare(link, title, text)) track('share_link', { channel: 'kakao' });
-            else copy(link, '링크 복사됨 · 카카오톡에 붙여 넣어요', 'kakao');
-          }}
-        >
-          카카오톡
-        </button>
-        <button type="button" className={cls} onClick={() => copy(url(), '링크 복사됨 · 인스타에 붙여 넣어요', 'instagram')}>인스타</button>
-        <button type="button" className={cls} onClick={() => copy(url(), '링크를 복사했어요')}>링크 복사</button>
-      </div>
+      <button type="button" className={btn.mdOutline} onClick={() => copy(url(), '링크를 복사했어요 · 단톡방에 붙여 넣어요')}>
+        {label}
+      </button>
       {toast}
     </>
   );

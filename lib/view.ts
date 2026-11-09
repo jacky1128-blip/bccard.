@@ -2,7 +2,7 @@
 // 태그·영업시간 문구는 모두 여기서 만듦. 잇플 필드에 없는 내용(실시간 혼잡·좌석·메뉴 등)은 쓰지 않음
 import type { EatplItem } from '@/types/eatpl';
 import type { Mode } from '@/types/group';
-import { hhmm, timeBucket, toMinutes } from './time';
+import { hhmm, isOpenAtMinutes, timeBucket, toMinutes } from './time';
 
 export type StoreView = {
   key: string;
@@ -13,8 +13,9 @@ export type StoreView = {
   open?: string;        // 영업 예상 시작 (원래 값, 영업 중 판단용)
   close?: string;       // 영업 예상 종료 (원래 값, 자정 넘김 가능)
   openAt?: string;      // 표시용 시작 시각 (30분 단위) "10:30"
-  hours: string;        // 표시용 "영업 예상 10:30~22:00" / "24시간" (30분 단위)
-  until: string;        // 경기·공연 결과 배지 "22:00까지" / "24시간"
+  hours: string;        // 표시용 "영업 예상 10:30~22:00" / "영업시간 확인 필요" (30분 단위)
+  until: string;        // 경기·공연 결과 배지 "22:00까지" (영업시간 불확실하면 빈칸)
+  hoursUnsure?: boolean; // 하루 종일 결제 기록 → 실제 영업시간 모름
   fan?: string;         // 주요 고객층 1위 "20대 여성"
   fans: string[];       // 주요 고객층 1~3위
   walk?: string;        // "도보 4분"
@@ -44,7 +45,12 @@ export function fanLabel(v?: string) {
   return v.replace(/이상/, ' 이상').replace(/(여성|남성)$/, ' $1').replace(/\s+/g, ' ').trim();
 }
 
-// 영업 예상 시간이 23시간 이상이면 24시간으로 봄 (결제 승인 시각 기반이라 몇 분 비는 경우가 많음)
+// 영업 예상 시간이 23시간 이상 = 하루 종일 결제 기록이 있음.
+// 잇플은 하루를 06:00~다음날 05:59로 집계하는 것으로 보임 → 이런 가게가 역삼동 100곳 중 19곳이고 거의 다 "0600~0555" 꼴.
+// 진짜 24시간 가게(해장국 등)와 배달·정산 때문에 새벽 결제가 찍힌 가게(치킨·샌드위치 등)를 구분할 수 없음 (2026-11-10 확인)
+// → 화면엔 "영업시간 확인 필요", 영업 중 판단은 낮(06~22시)에만 연 것으로 봄
+export const UNSURE_OPEN = 6 * 60;
+export const UNSURE_CLOSE = 22 * 60;
 export function isAllDay(srt?: string, end?: string) {
   const s = toMinutes(srt);
   const e = toMinutes(end);
@@ -59,6 +65,12 @@ export function roundHalfHour(t?: string) {
   if (m == null) return undefined;
   const r = (Math.round(m / 30) * 30) % 1440;
   return `${String(Math.floor(r / 60)).padStart(2, '0')}:${String(r % 60).padStart(2, '0')}`;
+}
+
+// 그 시각에 열었을지: true / false / null(영업시간 정보 없음)
+export function likelyOpenAt(srt: string | undefined, end: string | undefined, at: number): boolean | null {
+  if (isAllDay(srt, end)) return at >= UNSURE_OPEN && at < UNSURE_CLOSE;
+  return isOpenAtMinutes(srt, end, at);
 }
 
 /* ---------- 태그 (잇플 필드 → 문구) ---------- */
@@ -97,6 +109,14 @@ export function buildTags(it: EatplItem, o: TagContext): string[] {
   return [...first, top, peak, closed, peakDay, foreign].filter((x): x is string => !!x).slice(0, 4);
 }
 
+// 주소는 도로명 + 건물번호까지만 "부산 동구 중앙대로 175 12 3층 (초량동)" → "부산 동구 중앙대로 175"
+export function shortAddress(addr?: string) {
+  if (!addr) return undefined;
+  const base = addr.replace(/\s*\(.*$/, '').replace(/,.*$/, '').trim();
+  const m = base.match(/^(.*?(?:로|길)\s?\d+(?:-\d+)?)(?=\s|$)/);
+  return (m ? m[1] : base).trim();
+}
+
 // 가맹점 법인명 표기 정리 "(주)전한강강술래역삼점" → "전한강강술래역삼점"
 // 카드 가맹점명은 "가게명/법인명"인 경우가 많음 → "술탄베이케밥/에스엘티에프엔비" → "술탄베이케밥"
 export const cleanName = (n: string) =>
@@ -112,7 +132,7 @@ export function toView(it: EatplItem, i: number): StoreView {
   const open = roundHalfHour(it.srtTime);
   const close = roundHalfHour(it.endTime);
   const allDay = isAllDay(it.srtTime, it.endTime);
-  const hours = allDay ? '24시간' : open && close ? `영업 예상 ${open}~${close}` : '';
+  const hours = allDay ? '영업시간 확인 필요' : open && close ? `영업 예상 ${open}~${close}` : '';
   const walkMin = num(it._walkMin);
   const rk = it.vistCstmrRnkList ?? {};
   const fans = [rk.rk01, rk.rk02, rk.rk03].map(fanLabel).filter((x): x is string => !!x);
@@ -121,12 +141,13 @@ export function toView(it: EatplItem, i: number): StoreView {
     rank: i + 1,
     name,
     cat: str(it.merTpbuzNm) ?? '',
-    address: str(it.merAddr)?.replace(/\s*\(.*$/, '').replace(/,.*$/, '').trim(),
-    open: allDay ? '00:00' : hhmm(it.srtTime),
-    close: allDay ? '24:00' : hhmm(it.endTime),
+    address: shortAddress(str(it.merAddr)),
+    open: hhmm(it.srtTime),
+    close: hhmm(it.endTime),
     openAt: allDay ? undefined : open,
     hours,
-    until: allDay ? '24시간' : close ? `${close}까지` : '',
+    until: allDay ? '' : close ? `${close}까지` : '',
+    hoursUnsure: allDay,
     fan: fans[0],
     fans,
     walk: walkMin != null ? `도보 ${walkMin}분` : undefined,

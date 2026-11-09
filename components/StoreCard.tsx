@@ -54,7 +54,7 @@ export default function StoreCard({
     <div className="flex flex-col gap-2.5 rounded-2xl border border-line p-4">
       <div className="flex items-start justify-between gap-2.5">
         <div className="flex min-w-0 items-start gap-2">
-          {showRank && <span className={`w-[22px] text-lg font-black text-primary ${t.num}`}>{store.rank}</span>}
+          {showRank && <span className={`min-w-[22px] shrink-0 text-lg font-black text-primary ${t.num}`}>{store.rank}</span>}
           <div className="flex flex-col gap-0.5">
             <h3 className={t.storeLg}>{store.name}</h3>
             <Meta parts={[store.cat, store.hours, showWalk ? store.walk : undefined]} />

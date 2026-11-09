@@ -12,8 +12,8 @@ import { pickCandidates, rankForMode, ruleReason, type PickOptions } from './rec
 import { writeReasons } from './llm';
 import { MODE_ORDER } from './modes';
 import { mockItems } from './mock';
-import { toViews, type StoreView } from './view';
-import { isOpenAtMinutes } from './time';
+import { likelyOpenAt, toViews, type StoreView } from './view';
+
 
 const BASE = (process.env.KSKILL_PROXY_BASE_URL || 'https://k-skill-proxy.nomadamas.org').replace(/\/+$/, '');
 
@@ -80,7 +80,7 @@ export async function getCandidates(q: CandidateQuery): Promise<StoresResult> {
   } catch (e) {
     if (e instanceof PlaceNotFound) return { live: false, notFound: true, label: cleanPlace(q.place), stores: [], error: e.message };
     let views = toViews(mockItems(q.mode, 10));
-    if (q.at != null) views = views.filter((s) => isOpenAtMinutes(s.open, s.close, q.at!) !== false);
+    if (q.at != null) views = views.filter((s) => likelyOpenAt(s.open, s.close, q.at!) !== false);
     if (q.maxWalk != null) views = views.filter((s) => (s.walkMin ?? 0) <= q.maxWalk!);
     return { live: false, label: cleanPlace(q.place), stores: views.slice(0, limit).map((s, i) => ({ ...s, rank: i + 1 })), error: (e as Error).message };
   }

@@ -7,7 +7,8 @@ import { useRouter } from 'next/navigation';
 import type { Mode } from '@/types/group';
 import type { StoreView } from '@/lib/view';
 import { MODES } from '@/lib/modes';
-import { isOpenAtMinutes, timeBucket } from '@/lib/time';
+import { timeBucket } from '@/lib/time';
+import { likelyOpenAt } from '@/lib/view';
 import { useNowMinutes } from '@/lib/useNowMinutes';
 import ModeChips, { syncModeToUrl } from './ModeChips';
 import Filters, { DEFAULT_FILTER, type FilterValue } from './Filters';
@@ -37,6 +38,7 @@ export default function RankingView({
   const [mode, setMode] = useState(initialMode);
   const [f, setF] = useState<FilterValue>(DEFAULT_FILTER);
   const [more, setMore] = useState(false);
+  const [showClosed, setShowClosed] = useState(false);
   const now = useNowMinutes();
   const m = MODES[mode];
   const stores = storesByMode[mode];
@@ -46,6 +48,7 @@ export default function RankingView({
     setMode(x);
     setF(DEFAULT_FILTER);
     setMore(false);
+    setShowClosed(false);
     syncModeToUrl(x);
   };
 
@@ -62,10 +65,10 @@ export default function RankingView({
       ),
     [stores, f, now],
   );
-  const isOpen = (s: StoreView) => now == null || isOpenAtMinutes(s.open, s.close, now) !== false;
+  const isOpen = (s: StoreView) => now == null || likelyOpenAt(s.open, s.close, now) !== false;
   const list = f.openNow ? base.filter(isOpen) : base;
-  // 영업 중 필터를 켰는데 문 연 곳이 5곳 미만이면 → 문 닫은 곳을 아래에 따로 보여줘서 화면이 비지 않게
-  const closed = f.openNow && list.length < 5 ? base.filter((s) => !isOpen(s)) : [];
+  // 영업 중 필터를 켜면 문 닫은 곳은 목록에서 빼고, 보고 싶을 때만 펼침 (섞여 보이지 않게)
+  const closed = f.openNow ? base.filter((s) => !isOpen(s)) : [];
   const shown = more ? list : list.slice(0, 5);
 
   return (
@@ -108,7 +111,7 @@ export default function RankingView({
       <div className="flex flex-col gap-2.5">
         {shown.length === 0 && (
           <p className={`rounded-2xl bg-fill py-8 text-center ${t.desc}`}>
-            {closed.length ? '지금 문 연 곳이 없어요 · 아래는 지금 닫은 곳이에요' : '조건에 맞는 곳이 없어요'}
+            {closed.length ? '지금 문 연 곳이 없어요' : '조건에 맞는 곳이 없어요'}
           </p>
         )}
         {shown.map((s) => <StoreCard key={s.key} store={s} showRank />)}
@@ -117,14 +120,21 @@ export default function RankingView({
             {list.length > 6 ? `6~${list.length}위` : '6위'} 더 보기
           </button>
         )}
-        {closed.length > 0 && (
+        {closed.length > 0 && !showClosed && (
+          <button type="button" onClick={() => setShowClosed(true)} className={`${btn.textLink} self-center py-2`}>
+            지금 문 닫은 곳 {closed.length}곳도 보기
+          </button>
+        )}
+        {closed.length > 0 && showClosed && (
           <>
             <div className="mt-2 flex items-baseline justify-between">
-              <span className={t.sectionTitle}>지금은 문 닫은 곳</span>
-              <span className={t.desc}>여는 시간 확인하고 가요</span>
+              <span className={t.sectionTitle}>지금 문 닫은 곳</span>
+              <button type="button" onClick={() => setShowClosed(false)} className={btn.textLink}>접기</button>
             </div>
-            <div className="flex flex-col gap-2.5">
-              {closed.map((s) => <StoreCard key={s.key} store={s} showRank highlight={s.openAt ? `${s.openAt} 오픈 예상` : undefined} />)}
+            <div className="flex flex-col gap-2.5 opacity-60">
+              {closed.map((s) => (
+                <StoreCard key={s.key} store={s} showRank highlight={s.hoursUnsure ? '영업시간 확인 필요' : s.openAt ? `${s.openAt} 오픈 예상` : undefined} />
+              ))}
             </div>
           </>
         )}

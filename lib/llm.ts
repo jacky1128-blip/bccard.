@@ -34,7 +34,7 @@ function facts(it: EatplItem, i: number) {
     동네맛집: it.loclPrsnPpltYn ?? null,
     회식_적합: it.empyVsitYn ?? null,
     외국인_방문_많음: it.frnrVsitYn ?? null,
-    영업_예상_시간: isAllDay(it.srtTime, it.endTime) ? '24시간' : `${roundHalfHour(it.srtTime) ?? '?'}~${roundHalfHour(it.endTime) ?? '?'}`,
+    영업_예상_시간: isAllDay(it.srtTime, it.endTime) ? '알 수 없음(하루 종일 결제 기록이 있어 실제 영업시간을 모름)' : `${roundHalfHour(it.srtTime) ?? '?'}~${roundHalfHour(it.endTime) ?? '?'}`,
     결제가_가장_몰리는_요일: it.congestionDwk ?? null,
     결제가_가장_몰리는_시간대: it.congestionTizn ?? null,
     휴무_요일: it.hldyDwk?.length ? it.hldyDwk : null,

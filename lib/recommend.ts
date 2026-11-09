@@ -2,8 +2,8 @@
 // AI는 여기서 고른 가게의 "이유"만 쓰고, 가게 선택은 항상 이 규칙이 함.
 import type { EatplItem } from '@/types/eatpl';
 import type { Mode } from '@/types/group';
-import { isOpenAtMinutes, timeBucket, toMinutes } from './time';
-import { buildTags, fanLabel, isAllDay } from './view';
+import { timeBucket, toMinutes } from './time';
+import { buildTags, fanLabel, isAllDay, likelyOpenAt, UNSURE_CLOSE, UNSURE_OPEN } from './view';
 
 // 한 끼 서비스라 식사가 아닌 업종은 뺌
 const NOT_MEAL = /카페|커피|디저트|베이커리|제과|빵|아이스크림|빙수|음료|주스|차 ?전문|떡집|편의점|도넛|와플|케이크|마카롱/;
@@ -29,9 +29,10 @@ export type PickOptions = {
 };
 
 const closeAfter = (it: EatplItem, at: number, minutes: number) => {
-  if (isAllDay(it.srtTime, it.endTime)) return true;
-  const s = toMinutes(it.srtTime);
-  const e = toMinutes(it.endTime);
+  // 하루 종일 결제 기록 = 실제 영업시간 모름 → 06~22시 영업으로 보수적으로
+  const unsure = isAllDay(it.srtTime, it.endTime);
+  const s = unsure ? UNSURE_OPEN : toMinutes(it.srtTime);
+  const e = unsure ? UNSURE_CLOSE : toMinutes(it.endTime);
   if (s == null || e == null) return false;
   const end = e <= s ? e + 1440 : e;            // 자정 넘김
   const now = at < s && e <= s ? at + 1440 : at; // 새벽 시간대
@@ -46,7 +47,7 @@ export function passes(it: EatplItem, o: PickOptions) {
   if (NOT_MEAL.test(cat)) return false;
   for (const c of o.cantEat ?? []) if (CANT_RULES[c]?.test(cat)) return false;
   if (o.day && it.hldyDwk?.includes(o.day)) return false;
-  if (o.at != null && isOpenAtMinutes(it.srtTime, it.endTime, o.at) === false) return false;
+  if (o.at != null && likelyOpenAt(it.srtTime, it.endTime, o.at) === false) return false;
   if (o.after && o.at != null && !closeAfter(it, o.at, 60)) return false;
   if (o.stayMin && o.at != null && !closeAfter(it, o.at, o.stayMin)) return false;
   if (o.maxWalk != null && (it._walkMin ?? 0) > o.maxWalk) return false;
@@ -114,7 +115,7 @@ export function rankForMode(items: EatplItem[], mode: Mode, o: { at?: number; da
     const boost = (it: EatplItem) =>
       (mode === 'party' && it.empyVsitYn ? -1 : 0) +
       ((mode === 'travel' || mode === 'meal') && it.loclPrsnPpltYn ? -1 : 0) +
-      (mode === 'event' && (isAllDay(it.srtTime, it.endTime) || (toMinutes(it.endTime) ?? 0) <= (toMinutes(it.srtTime) ?? 0)) ? -1 : 0) +
+      (mode === 'event' && !isAllDay(it.srtTime, it.endTime) && (toMinutes(it.endTime) ?? 0) <= (toMinutes(it.srtTime) ?? 0) ? -1 : 0) +
       // 오늘 밥 한 끼 · 여행은 술집·주류판매점을 뒤로 (식사 목록이라서)
       ((mode === 'meal' || mode === 'travel') && CANT_RULES['술 못 마심'].test(it.merTpbuzNm ?? '') ? 2 : 0);
     return boost(a) - boost(b); // 같은 그룹 안에서는 원래 매출 순서 유지 (stable sort)
