@@ -61,20 +61,36 @@ function NaverMap({ center, top3, className }: { center: LatLng; top3: StoreView
 }
 
 /* ---------- 키 없을 때 자리표시 지도 ---------- */
+// 지도 위쪽은 검색창·질문·상황 칩이 덮고(약 40%), 아래는 시트가 덮음 → 핀은 그 사이(46~88%)에만
+const ME = { left: 46, top: 66 };
 const PINS = [
-  { left: '51%', top: '43%' },
-  { left: '18%', top: '59%' },
-  { left: '62%', top: '64%' },
+  { left: 56, top: 58 },
+  { left: 20, top: 76 },
+  { left: 70, top: 84 },
 ];
 
 // 키가 없어도 실제 좌표가 있으면 중심(내 위치·역) 기준 상대 위치로 핀을 찍음
 function pinPositions(top3: StoreView[], center?: LatLng) {
-  if (!center || top3.some((s) => s.lat == null || s.lng == null)) return PINS;
-  const kx = 88_000; // 경도 1도 ≈ 88km (위도 37도 부근)
-  const ky = 111_000;
-  const d = top3.map((s) => ({ x: (s.lng! - center.lng) * kx, y: (s.lat! - center.lat) * ky }));
-  const max = Math.max(150, ...d.map((p) => Math.max(Math.abs(p.x), Math.abs(p.y))));
-  return d.map((p) => ({ left: `${Math.round(46 + (p.x / max) * 32)}%`, top: `${Math.round(52 - (p.y / max) * 32)}%` }));
+  let pts = PINS.slice(0, top3.length);
+  if (center && !top3.some((s) => s.lat == null || s.lng == null)) {
+    const kx = 88_000; // 경도 1도 ≈ 88km (위도 37도 부근)
+    const ky = 111_000;
+    const d = top3.map((s) => ({ x: (s.lng! - center.lng) * kx, y: (s.lat! - center.lat) * ky }));
+    const max = Math.max(150, ...d.map((p) => Math.max(Math.abs(p.x), Math.abs(p.y))));
+    pts = d.map((p) => ({ left: ME.left + (p.x / max) * 32, top: ME.top - (p.y / max) * 20 }));
+  }
+  // 1위는 이름까지 나와서 넓음 → 다른 핀과 겹치면 아래로 비켜 줌
+  const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
+  const placed: { left: number; top: number }[] = [];
+  for (const [i, p] of pts.entries()) {
+    const base = { left: clamp(p.left, 14, 82), top: clamp(p.top, 46, 88) };
+    const hits = (q: { left: number; top: number }) =>
+      placed.some((o, j) => Math.abs(o.top - q.top) < 9 && Math.abs(o.left - q.left) < (j === 0 || i === 0 ? 32 : 12));
+    // 위아래로 조금씩 멀리 → 그래도 겹치면 좌우로
+    const tries = [0, 10, -10, 20, -20, 30, -30].flatMap((dy) => [0, 30, -30].map((dx) => ({ left: clamp(base.left + dx, 14, 82), top: clamp(base.top + dy, 46, 88) })));
+    placed.push(tries.find((q) => !hits(q)) ?? base);
+  }
+  return placed.map((p) => ({ left: `${Math.round(p.left)}%`, top: `${Math.round(p.top)}%` }));
 }
 
 function PlaceholderMap({ top3, center, className }: { top3: StoreView[]; center?: LatLng; className: string }) {
@@ -86,7 +102,7 @@ function PlaceholderMap({ top3, center, className }: { top3: StoreView[]; center
       <div className="absolute inset-x-0 top-[71%] h-2 bg-[#F7F8FA]" />
       <div className="absolute inset-y-0 left-[74%] w-2 bg-[#F7F8FA]" />
       <div className="absolute left-[8%] top-[45%] h-[21%] w-1/4 rounded-lg bg-[#DDE6D8]" />
-      <div className="absolute left-[46%] top-[52%] size-[22px] -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-white bg-navy shadow-[0_0_0_8px_rgba(38,50,92,0.15)]" />
+      <div className="absolute left-[46%] top-[66%] size-[22px] -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-white bg-navy shadow-[0_0_0_8px_rgba(38,50,92,0.15)]" />
       {top3.map((s, i) => (
         <div
           key={s.key}

@@ -84,12 +84,12 @@ export default function HomeView({
       <div className="relative -mt-8 flex flex-1 flex-col gap-3 rounded-t-[22px] bg-white px-5 pb-5 pt-3 shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
         <span className="h-1 w-10 self-center rounded-sm bg-[#D5D8DC]" />
         <Brand />
-        {/* 고른 상황 + 혼자/여럿이 구분 */}
-        <span className={t.kicker}>{m.label} · {m.who}</span>
-        <div className="-mt-1.5 flex items-baseline justify-between gap-2">
-          <h2 className={t.sheetTitle}>{placeLabel === '내 위치' || !placeLabel ? '내 주변' : `${place} 근처`} 결제 많은 가게 TOP 3</h2>
+        {/* 위: 장소 + TOP 3 (작은 파란 글씨) / 큰 제목: 상황마다 바뀜 (혼자·여럿이 구분) */}
+        <div className="flex items-baseline justify-between gap-2">
+          <span className={t.kicker}>{placeLabel === '내 위치' || !placeLabel ? '내 주변' : `${place} 근처`} 결제 많은 가게 TOP 3</span>
           <Link href={`/ranking?mode=${mode}${placeQs}`} className={`shrink-0 ${btn.textLink}`}>전체 순위 보기</Link>
         </div>
+        <h2 className={`-mt-1.5 ${t.sheetTitle}`}>{m.homeTitle}</h2>
         <span className={`-mt-1.5 ${t.desc}`}>
           {locating ? '내 위치 찾는 중… · ' : placeLabel && placeLabel !== '내 위치' ? '' : `${place} 기준 · `}지도의 번호와 같아요. 최근 1개월 BC카드 결제 정보를 참고했어요.
         </span>
