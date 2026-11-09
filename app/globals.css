@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+/* 와이어프레임 색 */
+:root {
+  --primary: #2f54eb;
+  --primary-ink: #1d39c4;
+  --primary-soft: #e8edff;
+  --ink: #191a1c;
+  --sub: #5b5f66;
+  --line: #e5e7eb;
+  --line-2: #c9cdd3;
+  --fill: #f5f6f8;
+  --badge: #eef0f6;
+  --navy: #26325c;
+  --map: #eceef1;
+}
+
+@theme inline {
+  --color-primary: var(--primary);
+  --color-primary-ink: var(--primary-ink);
+  --color-primary-soft: var(--primary-soft);
+  --color-ink: var(--ink);
+  --color-sub: var(--sub);
+  --color-line: var(--line);
+  --color-line-2: var(--line-2);
+  --color-fill: var(--fill);
+  --color-badge: var(--badge);
+  --color-navy: var(--navy);
+  --color-map: var(--map);
+}
+
+/* 글꼴: font-sans = Pretendard (본문·데이터), font-display = 배민 주아체 (제목·가게 이름·버튼)
+   --font-jua 는 app/layout.tsx 의 next/font 가 <html>에 넣어 줌 */
+@theme {
+  --font-sans: "Pretendard Variable", Pretendard, system-ui, sans-serif;
+  --font-display: var(--font-jua), "Pretendard Variable", Pretendard, sans-serif;
+}
+
+@layer base {
+  html,
+  body {
+    background: var(--fill);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    /* 한국어 단어 중간에서 줄바꿈 금지 */
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+
+  /* base 레이어에 둬야 버튼의 text-white 같은 유틸리티가 이김 */
+  a {
+    color: var(--primary-ink);
+  }
+
+  /* 입력창은 브라우저 기본 글꼴 대신 Pretendard */
+  input,
+  select,
+  textarea {
+    font-family: inherit;
+  }
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
