@@ -44,8 +44,10 @@ async function searchLocal(query: string): Promise<ResolvedPlace | null> {
   if (!res.ok) throw new Error(`naver local ${res.status}`);
   const data = (await res.json()) as { items?: { title: string; category?: string; address: string; roadAddress: string; mapx: string; mapy: string }[] };
   const items = data.items ?? [];
+  // 이름이 정확히 같은 곳 먼저 ("잠실종합운동장" → '…잠실종합운동장점' 카페 말고 운동장) /
   // "○○역" → 지하철역 결과 먼저 / "○○동" → 주소에 그 동이 들어 있는 결과 먼저 (이름만 비슷한 다른 동네 가게 제외)
   const it =
+    items.find((x) => strip(x.title).replace(/\s/g, '') === query.replace(/\s/g, '')) ||
     (/역$/.test(query) && items.find((x) => x.category?.includes('지하철'))) ||
     (/(동|읍|면|가|리)$/.test(query) && items.find((x) => x.address.split(/\s+/).some((w) => w === query || w.replace(/\d+(동|가)$/, '$1') === query))) ||
     items[0];

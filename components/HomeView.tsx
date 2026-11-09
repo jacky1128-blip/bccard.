@@ -18,12 +18,14 @@ export default function HomeView({
   center,
   placeLabel,
   live = true,
+  notFound = false,
 }: {
   initialMode: Mode;
   storesByMode: Record<Mode, StoreView[]>;
   center?: { lat: number; lng: number };
   placeLabel?: string;
   live?: boolean;
+  notFound?: boolean;
 }) {
   const router = useRouter();
   const [mode, setMode] = useState(initialMode);
@@ -93,7 +95,7 @@ export default function HomeView({
         <span className={`-mt-1.5 ${t.desc}`}>
           {locating ? '내 위치 찾는 중… · ' : placeLabel && placeLabel !== '내 위치' ? '' : `${place} 기준 · `}지도의 번호와 같아요. 최근 1개월 BC카드 결제 정보를 참고했어요.
         </span>
-        {!live && <DemoNote />}
+        {!live && <DemoNote notFound={notFound} place={place} />}
         <div className="flex flex-col">
           {top3.map((s) => <TopRow key={s.key} store={s} />)}
         </div>

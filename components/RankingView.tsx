@@ -22,6 +22,7 @@ export default function RankingView({
   placeLabel,
   nearby = [],
   live = true,
+  notFound = false,
 }: {
   initialMode: Mode;
   storesByMode: Record<Mode, StoreView[]>;
@@ -29,6 +30,7 @@ export default function RankingView({
   placeLabel?: string; // 실제로 조회한 장소 이름
   nearby?: string[];   // 근처 다른 역
   live?: boolean;      // false면 예시 데이터
+  notFound?: boolean;  // 장소를 못 찾음
 }) {
   const router = useRouter();
   const [query, setQuery] = useState('');
@@ -98,7 +100,7 @@ export default function RankingView({
         <input aria-label="다른 동네·역 검색" className={btn.field} value={query} onChange={(e) => setQuery(e.target.value)} placeholder="다른 동네·역 검색 (예: 성수역)" />
         <button className={`${btn.smOutline} h-12`}>찾기</button>
       </form>
-      {!live && <DemoNote />}
+      {!live && <DemoNote notFound={notFound} place={place} />}
       <ModeChips variant="tabs" value={mode} onChange={changeMode} />
       <Filters value={f} onChange={setF} cats={cats} />
       <span className={`-mt-2 ${t.desc}`}>최근 결제 금액 순으로 최대 10곳이에요.</span>

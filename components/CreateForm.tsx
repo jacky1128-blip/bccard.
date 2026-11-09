@@ -36,6 +36,8 @@ export default function CreateForm({
   const [title, setTitle] = useState('');
   const [memo, setMemo] = useState('');
   const m = MODES[mode];
+  // 모임 이름을 안 정하면 "성수역 회식·모임"처럼 장소 + 상황으로
+  const defaultTitle = `${place.trim() || '우리'} ${m.label}`;
 
   const pickMode = (x: Mode) => {
     // 장소를 직접 안 고쳤으면 상황 기본값으로 같이 바꿈
@@ -59,7 +61,7 @@ export default function CreateForm({
         const res = await fetch('/api/groups', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: getAnonToken(), mode, place, date, time, headcount, title: title || m.event, memo, mid, origin: mid ? myOrigin : '' }),
+          body: JSON.stringify({ token: getAnonToken(), mode, place, date, time, headcount, title: title || defaultTitle, memo, mid, origin: mid ? myOrigin : '' }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error ?? '모임을 만들지 못했어요');
@@ -72,7 +74,7 @@ export default function CreateForm({
     }
     // 데모: 주소에 값을 담아 모임 화면으로
     const id = Math.random().toString(36).slice(2, 8);
-    const qs = new URLSearchParams({ mode, place, headcount: String(headcount), title: title || m.event, host: '1' });
+    const qs = new URLSearchParams({ mode, place, headcount: String(headcount), title: title || defaultTitle, host: '1' });
     if (date) qs.set('date', date);
     if (time) qs.set('time', time);
     if (memo) qs.set('memo', memo);
@@ -159,7 +161,7 @@ export default function CreateForm({
             <span className={`shrink-0 ${btn.textLink}`}>추가 설정하기</span>
           </summary>
           <div className="mt-2 text-[13px] leading-[1.7] text-sub group-open:hidden">
-            모임 이름 · {title || m.event}
+            모임 이름 · {title || defaultTitle}
             <br />
             투표 마감 · {m.deadline} (상황별 자동)
             <br />
@@ -168,7 +170,7 @@ export default function CreateForm({
           <div className="mt-3 hidden flex-col gap-3 group-open:flex">
             <label className="flex flex-col gap-1 text-[13px] text-sub">
               모임 이름
-              <input className={btn.field} value={title} onChange={(e) => setTitle(e.target.value)} placeholder={m.event} />
+              <input className={btn.field} value={title} onChange={(e) => setTitle(e.target.value)} placeholder={defaultTitle} />
             </label>
             <span className="text-[13px] text-sub">투표 마감 · {m.deadline} (상황별 자동)</span>
             <label className="flex flex-col gap-1 text-[13px] text-sub">

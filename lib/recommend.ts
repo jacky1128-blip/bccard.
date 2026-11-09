@@ -23,6 +23,7 @@ export type PickOptions = {
   limit?: number;
   maxWalk?: number;       // 도보 분 상한
   after?: boolean;        // 경기·공연 끝나고: 기준 시각 이후 1시간 이상 영업해야 함
+  stayMin?: number;       // 기준 시각 이후 최소 이만큼 더 영업해야 함 (도착하자마자 닫는 곳 제외)
   now?: boolean;          // 기준 시각이 지금인지 (태그 "지금은" / "그 시간은")
   localOnly?: boolean;    // 동네맛집(loclPrsnPpltYn)만 (여행 "현지인 맛집")
 };
@@ -47,6 +48,7 @@ export function passes(it: EatplItem, o: PickOptions) {
   if (o.day && it.hldyDwk?.includes(o.day)) return false;
   if (o.at != null && isOpenAtMinutes(it.srtTime, it.endTime, o.at) === false) return false;
   if (o.after && o.at != null && !closeAfter(it, o.at, 60)) return false;
+  if (o.stayMin && o.at != null && !closeAfter(it, o.at, o.stayMin)) return false;
   if (o.maxWalk != null && (it._walkMin ?? 0) > o.maxWalk) return false;
   if (o.localOnly && it.loclPrsnPpltYn !== true) return false;
   return true;

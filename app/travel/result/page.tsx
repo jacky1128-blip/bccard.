@@ -17,7 +17,7 @@ async function Content({ searchParams }: { searchParams: Promise<SP> }) {
   const local = q(sp, 'local') !== '0';
 
   const r = await getCandidates({
-    place, mode: local ? 'travel' : 'meal', at: toMinutes(time)!, day: dayOfDate(date), maxWalk: near ? 10 : 20, limit: 3, now: false,
+    place, mode: local ? 'travel' : 'meal', at: toMinutes(time)!, day: dayOfDate(date), maxWalk: near ? 10 : 20, limit: 3, now: false, stayMin: 60, // 도착하자마자 닫는 곳 제외
     localOnly: local, // 제목의 "현지인 맛집" = 잇플 동네맛집(loclPrsnPpltYn)인 곳만
     when: `${date ?? ''} 도착 ${time}`.trim(),
   });
@@ -36,6 +36,8 @@ async function Content({ searchParams }: { searchParams: Promise<SP> }) {
       stats={[['도착', time], ['기준', local ? '동네맛집만' : '결제 순위'], ['거리', near ? '도보 10분 안' : '역 근처']]}
       stores={r.stores}
       demo={!r.live}
+      notFound={r.notFound}
+      place={r.label}
       highlight={() => `${time} 영업 예상`}
       groupHref={`/group/new?mode=travel&from=/travel&place=${encodeURIComponent(r.label)}`}
     />

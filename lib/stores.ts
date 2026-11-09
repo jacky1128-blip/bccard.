@@ -7,7 +7,7 @@ import type { EatplItem } from '@/types/eatpl';
 import type { Mode } from '@/types/group';
 import { distanceKm, walkMinutes, type LatLng } from './geo';
 import { searchEatpl } from './eatpl';
-import { cleanPlace, resolvePlace, type Place } from './places';
+import { cleanPlace, isCoord, resolvePlace, type Place } from './places';
 import { pickCandidates, rankForMode, ruleReason, type PickOptions } from './recommend';
 import { writeReasons } from './llm';
 import { MODE_ORDER } from './modes';
@@ -25,12 +25,16 @@ export type StoresResult = {
   stores: StoreView[];
   items?: EatplItem[];      // 후보 원본 (모임 저장용 스냅샷, live 일 때만)
   error?: string;
+  notFound?: boolean;      // 입력한 장소를 못 찾음 (예시 데이터 대신 빈 목록 + 안내)
+  widened?: boolean;       // 가까운 곳에 없어서 거리를 넓혀 찾음
 };
+
+class PlaceNotFound extends Error {}
 
 // 장소 → 좌표 + 그 동네 잇플 결과(도보 분 포함)
 async function loadArea(placeInput: string): Promise<{ place: Place; items: EatplItem[] }> {
   const place = await resolvePlace(placeInput);
-  if (!place) throw new Error(`장소를 찾지 못했어요: ${placeInput}`);
+  if (!place) throw new PlaceNotFound(`장소를 찾지 못했어요: ${placeInput}`);
   const { items } = await searchEatpl({ location: place.region });
   const center = { lat: place.lat, lng: place.lng };
   return {
@@ -42,34 +46,43 @@ async function loadArea(placeInput: string): Promise<{ place: Place; items: Eatp
 }
 
 const shortArea = (p: Place) => p.region.split(' ').slice(-1)[0];
+// 내 위치(좌표)는 좌표 대신 동 이름으로 보여줌 "37.48,126.92" → "신림동"
+const labelOf = (input: string, p: Place) => (isCoord(input) ? shortArea(p) : cleanPlace(input));
 
 export type CandidateQuery = Omit<PickOptions, 'limit'> & {
   place: string;
   limit?: number;
   ai?: boolean;            // 추천 이유를 AI로 (키 없으면 규칙 이유)
+  widenWalk?: number;      // 조건에 맞는 곳이 없으면 이 도보 분까지 넓혀서 한 번 더
   when?: string;
   headcount?: number;
 };
 
 // 후보 N곳 + 추천 이유 (AI 추천 · 끝나고 문 연 곳 · 여행 · 모임 후보)
 export async function getCandidates(q: CandidateQuery): Promise<StoresResult> {
-  const label = cleanPlace(q.place);
   const limit = q.limit ?? 3;
   try {
     const { place, items } = await loadArea(q.place);
-    const picked = pickCandidates(items, { ...q, limit });
+    let picked = pickCandidates(items, { ...q, limit });
+    let widened = false;
+    if (picked.length === 0 && q.widenWalk) {
+      picked = pickCandidates(items, { ...q, limit, maxWalk: q.widenWalk });
+      widened = picked.length > 0;
+    }
+    const label = labelOf(q.place, place);
     const ai = q.ai === false ? null : await writeReasons(picked, { mode: q.mode, place: label, when: q.when, cantEat: q.cantEat, headcount: q.headcount });
     const withReasons = picked.map((it, i) => ({
       ...it,
       _reason: ai?.[i] ?? ruleReason(it, { mode: q.mode, at: q.at, day: q.day, area: shortArea(place) }),
       _reasonBy: ai ? ('ai' as const) : ('rule' as const),
     }));
-    return { live: true, label, center: { lat: place.lat, lng: place.lng }, region: place.region, stores: toViews(withReasons), items: withReasons };
+    return { live: true, label, center: { lat: place.lat, lng: place.lng }, region: place.region, stores: toViews(withReasons), items: withReasons, widened };
   } catch (e) {
+    if (e instanceof PlaceNotFound) return { live: false, notFound: true, label: cleanPlace(q.place), stores: [], error: e.message };
     let views = toViews(mockItems(q.mode, 10));
     if (q.at != null) views = views.filter((s) => isOpenAtMinutes(s.open, s.close, q.at!) !== false);
     if (q.maxWalk != null) views = views.filter((s) => (s.walkMin ?? 0) <= q.maxWalk!);
-    return { live: false, label, stores: views.slice(0, limit).map((s, i) => ({ ...s, rank: i + 1 })), error: (e as Error).message };
+    return { live: false, label: cleanPlace(q.place), stores: views.slice(0, limit).map((s, i) => ({ ...s, rank: i + 1 })), error: (e as Error).message };
   }
 }
 
@@ -84,8 +97,11 @@ export async function getStoresByMode(placeInput: string, o: { at?: number; day?
     const within = (min: number) => all.filter((it) => it._walkMin == null || it._walkMin <= min);
     const items = [20, 30].map(within).find((xs) => xs.length >= 10) ?? all;
     const storesByMode = Object.fromEntries(MODE_ORDER.map((m) => [m, toViews(rankForMode(items, m, o))])) as Record<Mode, StoreView[]>;
-    return { live: true, label, center: { lat: place.lat, lng: place.lng }, region: place.region, storesByMode };
+    return { live: true, label: labelOf(placeInput, place), center: { lat: place.lat, lng: place.lng }, region: place.region, storesByMode };
   } catch (e) {
+    if (e instanceof PlaceNotFound) {
+      return { live: false, notFound: true, label, storesByMode: Object.fromEntries(MODE_ORDER.map((m) => [m, []])) as unknown as Record<Mode, StoreView[]>, error: e.message };
+    }
     const storesByMode = Object.fromEntries(MODE_ORDER.map((m) => [m, toViews(mockItems(m, o.limit ?? 10))])) as Record<Mode, StoreView[]>;
     return { live: false, label, storesByMode, error: (e as Error).message };
   }

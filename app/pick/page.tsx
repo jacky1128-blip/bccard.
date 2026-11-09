@@ -22,7 +22,7 @@ async function Content({ searchParams }: { searchParams: Promise<SP> }) {
   const place = q(sp, 'place') ?? DEFAULT_PLACE;
   const { minutes, dow } = kstNow();
   const now = addMinutes('00:00', minutes);
-  const r = await getCandidates({ place, mode, at: minutes, day: dow, limit: 3, maxWalk: 20, when: `${dow}요일 지금 ${now}` });
+  const r = await getCandidates({ place, mode, at: minutes, day: dow, limit: 3, maxWalk: 20, stayMin: 30, when: `${dow}요일 지금 ${now}` });
   const [first, ...alts] = r.stores;
   const placeQs = q(sp, 'place') ? `&place=${encodeURIComponent(place)}` : '';
 
@@ -40,7 +40,7 @@ async function Content({ searchParams }: { searchParams: Promise<SP> }) {
         }
         desc="결제 순위에 영업시간·거리·예상 혼잡을 반영했어요"
       />
-      {!r.live && <DemoNote />}
+      {!r.live && <DemoNote notFound={r.notFound} place={r.label} />}
       {first ? (
         <>
           <Section title="지금 1순위">

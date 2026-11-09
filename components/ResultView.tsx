@@ -9,7 +9,7 @@ import { CopyLinkButton } from './ShareButtons';
 import { BrandHeader, Page, PageTitle, Section, StatBoxes, btn, t } from './ui';
 
 export default function ResultView({
-  back, kicker, title, stats, notice, stores, highlight, altTime, groupHref, demo = false,
+  back, kicker, title, stats, notice, stores, highlight, altTime, groupHref, demo = false, notFound = false, place,
 }: {
   back: string;
   kicker: string;
@@ -21,6 +21,8 @@ export default function ResultView({
   altTime?: (s: StoreView) => string;
   groupHref: string;
   demo?: boolean;
+  notFound?: boolean;
+  place?: string;
 }) {
   const [first, ...alts] = stores;
   return (
@@ -28,7 +30,7 @@ export default function ResultView({
       <BrandHeader back={back} />
       <PageTitle kicker={kicker} title={title} />
       <StatBoxes items={stats} />
-      {demo && <DemoNote />}
+      {demo && <DemoNote notFound={notFound} place={place} />}
       {notice && (
         <div className="rounded-xl bg-primary-soft px-3.5 py-3">
           <span className={t.kicker}>{notice}</span>
@@ -46,7 +48,7 @@ export default function ResultView({
           )}
         </>
       ) : (
-        <p className="rounded-2xl bg-fill py-10 text-center text-sm text-sub">그 시간에 문 연 곳이 없어요. 시간을 바꿔 보세요</p>
+        <p className="rounded-2xl bg-fill py-10 text-center text-sm text-sub">{notFound ? '장소를 찾으면 그 시간에 문 연 곳을 보여드려요' : '그 시간에 문 연 곳이 없어요. 시간을 바꿔 보세요'}</p>
       )}
       <div className="flex flex-col gap-2">
         <Link href={groupHref} className={btn.primary}>같이 갈 사람 초대하기</Link>
