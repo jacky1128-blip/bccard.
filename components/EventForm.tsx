@@ -1,5 +1,5 @@
 'use client';
-// 경기·공연: 어디서 → 언제(전/후) → 무엇(경기/공연) → 끝나는 시간
+// 경기·공연: 일정 불러오기(장소·시간 자동) → 언제(전/후) → 장소·시간 확인
 // 경기는 날짜를 고르면 KBO·K리그 일정을 불러와서 구장·시작 시간을 채움 (끝나는 시간은 평균 경기 시간으로 추정)
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
@@ -71,7 +71,7 @@ export default function EventForm() {
   return (
     <Page>
       <TitleHeader back="/?mode=event" title="경기·공연 전후" />
-      <span className={`-mt-2 ${t.desc}`}>끝나는 시간에 맞춰, 그때도 문 연 결제 상위만 보여드려요</span>
+      <span className={`-mt-2 ${t.desc}`}>끝나는 시간에도 영업하는, 결제 많은 식당을 보여드려요</span>
       <form
         className="flex flex-1 flex-col gap-5"
         onSubmit={(e) => {
@@ -81,7 +81,8 @@ export default function EventForm() {
           router.push(`/event/result?${qs}`);
         }}
       >
-        <Section title="1. 무엇을 봐요?">
+        {/* 1. 일정 불러오기 하나로 장소·시간까지 채움 (피드백: 1·3·4를 한 번에) */}
+        <Section title="1. 경기·공연 일정 불러오기">
           <div className="grid grid-cols-2 gap-2">
             <button type="button" aria-pressed={kind === 'game'} onClick={() => pickKind('game')} className={kind === 'game' ? btn.segOn : btn.segOff}>경기</button>
             <button type="button" aria-pressed={kind === 'show'} onClick={() => pickKind('show')} className={kind === 'show' ? btn.segOn : btn.segOff}>공연</button>
@@ -112,33 +113,36 @@ export default function EventForm() {
                   ))}
                 </div>
               )}
-              <span className={t.desc}>고르면 구장과 시작 시간이 채워져요 · 끝나는 시간은 평균 경기 시간으로 미리 채워요</span>
+              {!!games?.length && <span className={t.desc}>고르면 장소와 시간이 아래에 자동으로 채워져요</span>}
             </div>
           )}
+          {kind === 'show' && <span className={t.desc}>공연은 아래에 장소와 시간을 직접 넣어 주세요</span>}
         </Section>
 
-        <Section title="2. 어디서 봐요?">
-          <label className="flex h-12 items-center gap-2 rounded-xl border border-line-2 px-3.5 focus-within:border-primary">
-            <PinIcon />
-            <input aria-label="공연장·경기장" className="flex-1 text-[15px] outline-none" value={venue} onChange={(e) => setVenue(e.target.value)} required />
-          </label>
-          <div className="flex flex-wrap gap-1.5">
-            {VENUES.map((v) => (
-              <button key={v} type="button" onClick={() => setVenue(v)} className={venue === v ? btn.pillOn : btn.pillOff}>{v}</button>
-            ))}
-          </div>
-        </Section>
-
-        <Section title="3. 언제 먹어요?">
+        <Section title="2. 언제 먹어요?">
           <div className="grid grid-cols-2 gap-2">
             <button type="button" aria-pressed={timing === 'before'} onClick={() => pickTiming('before')} className={timing === 'before' ? btn.segOn : btn.segOff}>시작 전</button>
             <button type="button" aria-pressed={timing === 'after'} onClick={() => pickTiming('after')} className={timing === 'after' ? btn.segOn : btn.segOff}>끝나고</button>
           </div>
         </Section>
 
-        <Section title={timing === 'after' ? '4. 끝나는 시간' : '4. 시작 시간'}>
+        {/* 3. 불러온 장소·시간 확인 (직접 입력·수정도 여기서) */}
+        <Section title={`3. 장소와 ${timing === 'after' ? '끝나는' : '시작'} 시간 확인`}>
+          <label className="flex h-12 items-center gap-2 rounded-xl border border-line-2 px-3.5 focus-within:border-primary">
+            <PinIcon />
+            <input aria-label="공연장·경기장" className="flex-1 text-[15px] outline-none" value={venue} onChange={(e) => setVenue(e.target.value)} required />
+          </label>
+          {!game && (
+            <div className="flex flex-wrap gap-1.5">
+              {VENUES.map((v) => (
+                <button key={v} type="button" onClick={() => setVenue(v)} className={venue === v ? btn.pillOn : btn.pillOff}>{v}</button>
+              ))}
+            </div>
+          )}
           <PickerInput type="time" aria-label={timing === 'after' ? '끝나는 시간' : '시작 시간'} value={time} onChange={(e) => setTime(e.target.value)} required />
-          <span className={t.desc}>경기는 평균 경기 시간으로 미리 채워요 · 공연은 직접 입력 · 언제든 수정 가능</span>
+          <span className={t.desc}>
+            {timing === 'after' ? '경기 종료 시간은 예상값이에요. 언제든 수정할 수 있어요.' : '시작 시간은 언제든 수정할 수 있어요.'}
+          </span>
         </Section>
 
         <button className={btn.primary + ' mt-auto'}>{timing === 'after' ? '끝나고 문 연 곳 보기' : '시작 전에 갈 곳 보기'}</button>

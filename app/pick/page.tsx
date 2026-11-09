@@ -30,7 +30,7 @@ async function Content({ searchParams }: { searchParams: Promise<SP> }) {
     <>
       <BrandHeader back={`/?mode=${mode}${placeQs}`} />
       <PageTitle
-        kicker={`AI 추천 · 지금 ${now} 기준 영업 · 혼잡 · 거리까지`}
+        kicker={`${m.label} · 지금 ${now} 기준`}
         title={
           <>
             {r.label} 근처
@@ -38,7 +38,7 @@ async function Content({ searchParams }: { searchParams: Promise<SP> }) {
             지금 갈 만한 곳
           </>
         }
-        desc={`${m.label} · 결제 순위를 지금 상황에 맞춰 다시 골랐어요`}
+        desc="결제 순위에 영업시간·거리·예상 혼잡을 반영했어요"
       />
       {!r.live && <DemoNote />}
       {first ? (
@@ -52,8 +52,8 @@ async function Content({ searchParams }: { searchParams: Promise<SP> }) {
         <p className={`rounded-2xl bg-fill py-10 text-center ${t.desc}`}>지금 문 연 곳이 없어요 · 전체 순위에서 여는 시간을 확인해 보세요</p>
       )}
       <div className="flex flex-col gap-2">
-        <Link href={`/ranking?mode=${mode}${placeQs}`} className={btn.outline}>전체 결제 순위 보기</Link>
-        <Link href={`/group/new?mode=${mode}${placeQs}`} className={btn.outline}>같이 먹을 사람 있으면 · 같이 정하기</Link>
+        <Link href={`/ranking?mode=${mode}${placeQs}`} className={btn.outline}>결제 순위 전체 보기</Link>
+        <Link href={`/group/new?mode=${mode}${placeQs}`} className={btn.outline}>같이 먹을 사람 있으면 · 투표할 방 만들기</Link>
       </div>
     </>
   );

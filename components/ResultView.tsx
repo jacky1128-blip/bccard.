@@ -49,7 +49,7 @@ export default function ResultView({
         <p className="rounded-2xl bg-fill py-10 text-center text-sm text-sub">그 시간에 문 연 곳이 없어요. 시간을 바꿔 보세요</p>
       )}
       <div className="flex flex-col gap-2">
-        <Link href={groupHref} className={btn.primary}>같이 갈 사람 부르기</Link>
+        <Link href={groupHref} className={btn.primary}>같이 갈 사람 초대하기</Link>
         <CopyLinkButton label="결과 링크 복사" className={btn.outline} />
       </div>
       <SourceNote ai />

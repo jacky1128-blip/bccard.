@@ -69,14 +69,21 @@ export default function RankingView({
     <>
       <BrandHeader back={`/?mode=${mode}`} />
       <PageTitle
+        kicker={m.label}
         title={
           <>
-            {place} 근처 {m.label}
+            {place} 근처
             <br />
-            결제 순위
+            결제 많은 가게
           </>
         }
-        desc={`${fixedPlace ? '고른 장소 기준' : m.placeNote} · 리뷰 말고 최근 1개월 BC카드 결제 기준`}
+        desc={
+          <>
+            {fixedPlace ? `고른 ${place} 기준이에요` : `현재 내 위치에서 가까운 ${place} 기준이에요`}
+            <br />
+            최근 1개월 BC카드 결제 정보를 참고했어요
+          </>
+        }
       />
       <form
         role="search"
@@ -93,7 +100,7 @@ export default function RankingView({
       {!live && <DemoNote />}
       <ModeChips variant="tabs" value={mode} onChange={changeMode} />
       <Filters value={f} onChange={setF} cats={cats} />
-      <span className={`-mt-2 ${t.desc}`}>매출 높은 순 · 최대 10곳 · 이 상황 기준 {m.crit}</span>
+      <span className={`-mt-2 ${t.desc}`}>최근 결제 금액 순으로 최대 10곳이에요.</span>
 
       <div className="flex flex-col gap-2.5">
         {shown.length === 0 && (
@@ -128,7 +135,7 @@ export default function RankingView({
 
       {nearby.length > 0 && (
         <div className="flex flex-wrap gap-2">
-          <span className={`w-full ${t.desc}`}>근처 다른 역</span>
+          <span className={`w-full ${t.desc}`}>근처 다른 역도 보기</span>
           {nearby.map((s) => (
             <Link key={s} href={`/r/${encodeURIComponent(s)}/${mode}`} className={btn.pillOff}>
               {s}

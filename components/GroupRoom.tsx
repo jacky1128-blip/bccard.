@@ -156,7 +156,7 @@ export default function GroupRoom({ initial, live }: { initial: GroupState; live
       <Page>
         <Brand />
         <div className="flex flex-col gap-1.5">
-          <span className={t.desc}>방장이 초대했어요 · 가입 없이</span>
+          <span className={t.desc}>방장님이 초대했어요. 가입 없어도 참여할 수 있어요.</span>
           <h1 className={t.pageTitle}>
             {g.title}
             <br />
@@ -175,9 +175,9 @@ export default function GroupRoom({ initial, live }: { initial: GroupState; live
           </div>
         </div>
         <div className="flex flex-col gap-2.5">
-          <SectionTitle>후보 3곳 · 결제 데이터 기준</SectionTitle>
+          <SectionTitle>결제 데이터로 고른 후보 3곳</SectionTitle>
           {g.stores.map((s) => <StoreCard key={s.key} store={s} showWalk={false} menuLabel="메뉴 확인하기" />)}
-          <span className={t.desc}>추천 이유는 투표가 시작되면 함께 보여요</span>
+          <span className={t.desc}>투표가 시작되면 AI 추천 이유도 볼 수 있어요</span>
         </div>
         {g.mid && (
           <div className="flex flex-col gap-2">
@@ -372,8 +372,8 @@ export default function GroupRoom({ initial, live }: { initial: GroupState; live
         <ShareButtons url={shareUrl} title={`${g.title} · ${winner?.name ?? ''}`} text={`${g.when} ${winner?.name ?? ''}로 정했어요 · 결제 데이터로 고른 곳`} />
       </div>
       <div className="flex flex-col gap-2">
-        <SectionTitle>다음 모임 방장은 누구?</SectionTitle>
-        <Link href={`/group/new?mode=${g.mode}`} className={btn.outline}>내 모임 만들기</Link>
+        <SectionTitle>방장이 되어 다음 모임을 만들 수 있어요</SectionTitle>
+        <Link href={`/group/new?mode=${g.mode}`} className={btn.outline}>새 모임 만들기</Link>
       </div>
       <SourceNote />
       {toast}

@@ -82,14 +82,14 @@ export default function CreateForm({
 
   return (
     <Page>
-      <TitleHeader back={back} title="같이 정하기" right="필수 4개" />
+      <TitleHeader back={back} title="같이 정하기" right="필수 3개" />
       <form onSubmit={submit} className="flex flex-col gap-5">
         <div className="flex flex-col gap-2">
-          <span className={t.desc}>이전 화면에서 고른 상황이 그대로 선택돼요 · 바꿀 수 있어요</span>
+          <span className={t.desc}>이전 화면에서 고른 내용은 그대로예요. 원하면 바꿀 수 있어요.</span>
           <ModeChips variant="pills" value={mode} onChange={pickMode} />
         </div>
 
-        <Section title="1. 어디서?">
+        <Section title="1. 어디서 만날까요?">
           {m.showMid && (
             <div className="grid grid-cols-2 gap-2">
               {[
@@ -130,16 +130,14 @@ export default function CreateForm({
           </label>
         </Section>
 
-        <div className="grid grid-cols-2 gap-2.5">
-          <Section title="2. 날짜">
+        <Section title="2. 언제 먹을까요?">
+          <div className="grid grid-cols-2 gap-2.5">
             <PickerInput type="date" aria-label="날짜" value={date} onChange={(e) => setDate(e.target.value)} required />
-          </Section>
-          <Section title="3. 시간">
             <PickerInput type="time" aria-label="시간" value={time} onChange={(e) => setTime(e.target.value)} required />
-          </Section>
-        </div>
+          </div>
+        </Section>
 
-        <Section title="4. 몇 명이서?">
+        <Section title="3. 몇 명이서 함께 먹나요?">
           <div className="flex h-14 items-center justify-between rounded-xl border-[1.5px] border-primary bg-primary-soft pl-4 pr-2">
             <span className="text-[15px] font-bold text-primary-ink">2명 이상</span>
             <div className="flex items-center gap-2.5">
@@ -156,8 +154,9 @@ export default function CreateForm({
         {mid && <span className={`-mt-3 text-center ${t.desc}`}>친구들도 초대 링크에서 자기 출발역을 넣을 수 있어요</span>}
 
         <details className="group flex flex-col gap-2 rounded-[14px] bg-fill p-4">
-          <summary className={`cursor-pointer list-none ${t.sectionTitle}`}>
-            더 설정하기 <span className={`font-sans ${t.desc}`}>선택 · 기본값 그대로 둬도 돼요</span>
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-2">
+            <span className={t.sectionTitle}>지금 설정 그대로 시작할까요?</span>
+            <span className={`shrink-0 ${btn.textLink}`}>추가 설정하기</span>
           </summary>
           <div className="mt-2 text-[13px] leading-[1.7] text-sub group-open:hidden">
             모임 이름 · {title || m.event}

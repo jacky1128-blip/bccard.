@@ -61,12 +61,16 @@ export default function HomeView({
             className="flex h-12 flex-1 items-center gap-2 rounded-[14px] bg-white px-3.5 no-underline shadow-[0_2px_10px_rgba(0,0,0,0.10)]"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B5F66" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
-            <span className="text-sm text-sub">지금 주변에서 뭐 먹지? 동네·역 검색</span>
+            <span className="text-sm text-sub">동네나 역 이름으로 검색해요</span>
           </Link>
           <button type="button" aria-label="내 위치로 이동" onClick={locate} disabled={locating} className="flex size-12 items-center justify-center rounded-[14px] bg-white shadow-[0_2px_10px_rgba(0,0,0,0.10)]">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2F54EB" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /></svg>
           </button>
         </div>
+        {/* 칩이 필터가 아니라 "상황 고르기"라는 걸 질문으로 먼저 보여줌 */}
+        <span className="self-start rounded-full bg-white/90 px-3 py-1 text-[13px] font-bold text-ink shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
+          어떤 상황에서 식당을 찾으세요?
+        </span>
         <ModeChips
           value={mode}
           onChange={(x) => {
@@ -80,18 +84,22 @@ export default function HomeView({
       <div className="relative -mt-8 flex flex-1 flex-col gap-3 rounded-t-[22px] bg-white px-5 pb-5 pt-3 shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
         <span className="h-1 w-10 self-center rounded-sm bg-[#D5D8DC]" />
         <Brand />
-        <div className="flex items-baseline justify-between">
-          <h2 className={t.sheetTitle}>{placeLabel === '내 위치' ? '내 주변' : `${place} 근처`} {m.label} 결제 TOP 3</h2>
-          <Link href={`/ranking?mode=${mode}${placeQs}`} className={btn.textLink}>전체 순위 보기</Link>
+        {/* 고른 상황 + 혼자/여럿이 구분 */}
+        <span className={t.kicker}>{m.label} · {m.who}</span>
+        <div className="-mt-1.5 flex items-baseline justify-between gap-2">
+          <h2 className={t.sheetTitle}>{placeLabel === '내 위치' || !placeLabel ? '내 주변' : `${place} 근처`} 결제 많은 가게 TOP 3</h2>
+          <Link href={`/ranking?mode=${mode}${placeQs}`} className={`shrink-0 ${btn.textLink}`}>전체 순위 보기</Link>
         </div>
-        <span className={`-mt-1.5 ${t.desc}`}>{locating ? '내 위치 찾는 중…' : `${place} 기준`} · 지도의 1·2·3 · 리뷰 말고 최근 1개월 BC카드 결제 기준</span>
+        <span className={`-mt-1.5 ${t.desc}`}>
+          {locating ? '내 위치 찾는 중… · ' : placeLabel && placeLabel !== '내 위치' ? '' : `${place} 기준 · `}지도의 번호와 같아요. 최근 1개월 BC카드 결제 정보를 참고했어요.
+        </span>
         {!live && <DemoNote />}
         <div className="flex flex-col">
           {top3.map((s) => <TopRow key={s.key} store={s} />)}
         </div>
         <div className="mt-auto flex flex-col gap-1.5 pt-2">
           <Link href={m.ctaHref.includes('?') ? `${m.ctaHref}${placeQs}` : m.ctaHref} className={btn.primary}>{m.cta}</Link>
-          <span className={`text-center ${t.desc}`}>지금 시간 · 영업 여부 · 혼잡도까지 따져서 골라드려요</span>
+          <span className={`text-center ${t.desc}`}>{m.ctaSub}</span>
         </div>
       </div>
     </main>

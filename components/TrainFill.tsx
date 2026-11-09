@@ -32,7 +32,7 @@ export default function TrainFill({ defaultDate, onFill }: { defaultDate: string
       onFill(data);
       setOpen(false);
     } catch (e) {
-      setError(`${(e as Error).message} · 위에 직접 입력해도 돼요`);
+      setError(`${(e as Error).message} · 아래에 직접 입력해도 돼요`);
     } finally {
       setLoading(false);
     }
@@ -55,8 +55,8 @@ export default function TrainFill({ defaultDate, onFill }: { defaultDate: string
   if (!open) {
     return (
       <button type="button" onClick={() => setOpen(true)} className="flex flex-col items-start gap-0.5 rounded-[14px] border-[1.5px] border-dashed border-primary bg-primary-soft px-3.5 py-3 text-left">
-        <span className="font-display text-[15px] text-primary-ink">예매한 열차로 채우기</span>
-        <span className={t.desc}>선택 · KTX·SRT 열차번호를 넣으면 도착역과 시간이 자동으로 들어가요</span>
+        <span className="font-display text-[15px] text-primary-ink">예매 정보로 도착 시간 채우기</span>
+        <span className={t.desc}>선택 · KTX·SRT 열차번호를 넣으면 도착역과 시간이 자동으로 들어가요 · 안 써도 아래에 직접 넣으면 돼요</span>
       </button>
     );
   }
@@ -64,7 +64,7 @@ export default function TrainFill({ defaultDate, onFill }: { defaultDate: string
   return (
     <div className="flex flex-col gap-2.5 rounded-[14px] border-[1.5px] border-primary bg-primary-soft p-3.5">
       <div className="flex items-center justify-between">
-        <span className={t.kicker}>예매한 열차로 채우기</span>
+        <span className={t.kicker}>예매 정보로 도착 시간 채우기</span>
         <button type="button" onClick={() => setOpen(false)} className={btn.textLink}>닫기</button>
       </div>
       <div className="grid grid-cols-2 gap-2">
@@ -87,7 +87,7 @@ export default function TrainFill({ defaultDate, onFill }: { defaultDate: string
       <button type="button" onClick={load} disabled={loading || !no} className={btn.mdPrimary}>
         {loading ? '불러오는 중…' : '도착역·시간 불러오기'}
       </button>
-      <span className="text-[11px] text-sub">승차권에 적힌 열차번호예요 · 안 넣어도 위에 직접 입력하면 돼요</span>
+      <span className="text-[11px] text-sub">승차권에 적힌 열차번호예요 · 안 넣어도 아래에 직접 입력하면 돼요</span>
     </div>
   );
 }

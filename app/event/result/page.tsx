@@ -34,7 +34,7 @@ async function Content({ searchParams }: { searchParams: Promise<SP> }) {
         </>
       }
       stats={[[after ? '종료 예상' : '시작', time], ['거리', '도보 15분 안'], ['정렬', '매출 높은 순']]}
-      notice={after ? `끝난 직후 ${hour}시대는 근처가 붐벼요 · 그 시간에 덜 붐비는 곳을 위로 올렸어요` : undefined}
+      notice={after ? `공연 직후 ${hour}시에는 주변이 붐빌 수 있어요 · 혼잡 낮은 순으로 보여드려요` : undefined}
       stores={r.stores}
       demo={!r.live}
       highlight={(s) => s.until}
