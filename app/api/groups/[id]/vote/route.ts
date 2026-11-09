@@ -1,7 +1,9 @@
-// 투표 (POST)
-import { NextResponse } from 'next/server';
+// 투표 (POST) { token, merKey } → GroupState
+import { voteGroup } from '@/lib/groups';
+import { groupRoute, readBody } from '@/lib/groupApi';
 
-export async function POST() {
-  // TODO
-  return NextResponse.json({});
+export async function POST(req: Request, ctx: RouteContext<'/api/groups/[id]/vote'>) {
+  const { id } = await ctx.params;
+  const body = await readBody(req);
+  return groupRoute(() => voteGroup(id, body));
 }

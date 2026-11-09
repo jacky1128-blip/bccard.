@@ -5,17 +5,31 @@ import { useRouter } from 'next/navigation';
 import type { Mode } from '@/types/group';
 import { MODES } from '@/lib/modes';
 import { track } from '@/lib/analytics';
+import { getAnonToken } from '@/lib/anon';
 import ModeChips from './ModeChips';
 import PickerInput from './PickerInput';
 import MidpointPicker from './MidpointPicker';
 import { createRule } from './SeatTable';
 import { Page, Section, TitleHeader, btn, t } from './ui';
 
-export default function CreateForm({ initialMode, back }: { initialMode: Mode; back: string }) {
+export default function CreateForm({
+  initialMode,
+  initialPlace,
+  back,
+  live = false,
+}: {
+  initialMode: Mode;
+  initialPlace?: string;
+  back: string;
+  live?: boolean; // DB(Supabase) 연결됨 → 서버에 모임 저장
+}) {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>(initialMode);
   const [mid, setMid] = useState(false);
-  const [place, setPlace] = useState(MODES[initialMode].place);
+  const [place, setPlace] = useState(initialPlace ?? MODES[initialMode].place);
+  const [myOrigin, setMyOrigin] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [headcount, setHeadcount] = useState(MODES[initialMode].defaultHeadcount);
@@ -34,14 +48,35 @@ export default function CreateForm({ initialMode, back }: { initialMode: Mode; b
     }
   };
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const id = Math.random().toString(36).slice(2, 8);
     track('create_group', { mode, headcount });
+    if (live) {
+      // 서버가 장소 해석 → 잇플 후보 3곳 → 추천 이유까지 만들어 저장
+      setBusy(true);
+      setError('');
+      try {
+        const res = await fetch('/api/groups', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: getAnonToken(), mode, place, date, time, headcount, title: title || m.event, memo, mid, origin: mid ? myOrigin : '' }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error ?? '모임을 만들지 못했어요');
+        router.push(`/g/${data.id}`);
+      } catch (err) {
+        setError((err as Error).message);
+        setBusy(false);
+      }
+      return;
+    }
+    // 데모: 주소에 값을 담아 모임 화면으로
+    const id = Math.random().toString(36).slice(2, 8);
     const qs = new URLSearchParams({ mode, place, headcount: String(headcount), title: title || m.event, host: '1' });
     if (date) qs.set('date', date);
     if (time) qs.set('time', time);
     if (memo) qs.set('memo', memo);
+    if (mid) qs.set('mid', '1');
     router.push(`/g/${id}?${qs}`);
   };
 
@@ -81,7 +116,7 @@ export default function CreateForm({ initialMode, back }: { initialMode: Mode; b
               ))}
             </div>
           )}
-          {mid && <MidpointPicker maxPeople={headcount} value={place} onPick={setPlace} />}
+          {mid && <MidpointPicker maxPeople={headcount} value={place} onPick={setPlace} onMyOrigin={setMyOrigin} />}
           <label className="flex flex-col gap-1">
             {mid && <span className={t.desc}>만날 역 · 위에서 고르거나 직접 고쳐도 돼요</span>}
             <input
@@ -113,10 +148,12 @@ export default function CreateForm({ initialMode, back }: { initialMode: Mode; b
               <button type="button" aria-label="인원 늘리기" onClick={() => setHeadcount(Math.min(12, headcount + 1))} className="size-9 rounded-full border border-line bg-white text-lg">+</button>
             </div>
           </div>
-          <span className={t.desc}>{createRule(headcount)}</span>
+          <span className={t.desc}>{createRule(headcount, mid)}</span>
         </Section>
 
-        <button className={btn.primary}>초대 링크 만들기</button>
+        {error && <p role="alert" className="rounded-xl bg-[#FFF0F0] px-3.5 py-2.5 text-[13px] text-[#C92A2A]">{error}</p>}
+        <button className={btn.primary} disabled={busy}>{busy ? '결제 데이터로 후보 찾는 중…' : '초대 링크 만들기'}</button>
+        {mid && <span className={`-mt-3 text-center ${t.desc}`}>친구들도 초대 링크에서 자기 출발역을 넣을 수 있어요</span>}
 
         <details className="group flex flex-col gap-2 rounded-[14px] bg-fill p-4">
           <summary className={`cursor-pointer list-none ${t.sectionTitle}`}>

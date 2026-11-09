@@ -18,10 +18,12 @@ export default function MidpointPicker({
   maxPeople,
   value,
   onPick,
+  onMyOrigin,
 }: {
   maxPeople: number;
   value: string;                       // 지금 모임 장소
   onPick: (station: string) => void;   // 장소 칸에 넣기
+  onMyOrigin?: (station: string) => void; // 첫 칸(나)의 출발역 → 모임 저장 시 방장 출발역
 }) {
   const [origins, setOrigins] = useState<string[]>(['', '']);
   const { people, options } = compute(origins);
@@ -30,6 +32,7 @@ export default function MidpointPicker({
   // 출발지가 바뀌면 가장 공평한 역을 바로 장소로 채움
   const update = (next: string[]) => {
     setOrigins(next);
+    onMyOrigin?.(findStation(next[0] ?? '') ? next[0] : '');
     const best = compute(next).options[0];
     if (best) onPick(`${best.station.name}역`);
   };

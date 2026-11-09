@@ -4,11 +4,12 @@ import type { StoreView } from '@/lib/view';
 import StoreCard from './StoreCard';
 import { AltRow } from './StoreRow';
 import SourceNote from './SourceNote';
+import DemoNote from './DemoNote';
 import { CopyLinkButton } from './ShareButtons';
 import { BrandHeader, Page, PageTitle, Section, StatBoxes, btn, t } from './ui';
 
 export default function ResultView({
-  back, kicker, title, stats, notice, stores, highlight, altTime, groupHref,
+  back, kicker, title, stats, notice, stores, highlight, altTime, groupHref, demo = false,
 }: {
   back: string;
   kicker: string;
@@ -19,6 +20,7 @@ export default function ResultView({
   highlight: (s: StoreView) => string;
   altTime?: (s: StoreView) => string;
   groupHref: string;
+  demo?: boolean;
 }) {
   const [first, ...alts] = stores;
   return (
@@ -26,6 +28,7 @@ export default function ResultView({
       <BrandHeader back={back} />
       <PageTitle kicker={kicker} title={title} />
       <StatBoxes items={stats} />
+      {demo && <DemoNote />}
       {notice && (
         <div className="rounded-xl bg-primary-soft px-3.5 py-3">
           <span className={t.kicker}>{notice}</span>

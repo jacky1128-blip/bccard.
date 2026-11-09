@@ -1,6 +1,6 @@
 // "중간에서 만나요": 각자 출발역 → 다 같이 가기 공평한 역 추천
 // 지금은 주요 역 좌표표 + 직선거리로 계산하는 데모.
-// TODO: 네이버 장소 검색(lib/naver.ts · /api/places/resolve)으로 아무 주소나 받고, k-skill 지하철로 실제 이동 시간 계산하도록 교체
+// TODO(키 필요): 실제 지하철 소요 시간은 경로 API(ODsay 등)가 필요함. k-skill 서울 지하철은 실시간 도착 정보만 있어 소요 시간 계산에 못 씀
 
 export type Station = { name: string; lat: number; lng: number };
 

@@ -67,7 +67,18 @@ const PINS = [
   { left: '62%', top: '64%' },
 ];
 
-function PlaceholderMap({ top3, className }: { top3: StoreView[]; className: string }) {
+// 키가 없어도 실제 좌표가 있으면 중심(내 위치·역) 기준 상대 위치로 핀을 찍음
+function pinPositions(top3: StoreView[], center?: LatLng) {
+  if (!center || top3.some((s) => s.lat == null || s.lng == null)) return PINS;
+  const kx = 88_000; // 경도 1도 ≈ 88km (위도 37도 부근)
+  const ky = 111_000;
+  const d = top3.map((s) => ({ x: (s.lng! - center.lng) * kx, y: (s.lat! - center.lat) * ky }));
+  const max = Math.max(150, ...d.map((p) => Math.max(Math.abs(p.x), Math.abs(p.y))));
+  return d.map((p) => ({ left: `${Math.round(46 + (p.x / max) * 32)}%`, top: `${Math.round(52 - (p.y / max) * 32)}%` }));
+}
+
+function PlaceholderMap({ top3, center, className }: { top3: StoreView[]; center?: LatLng; className: string }) {
+  const pins = pinPositions(top3, center);
   return (
     <div className={`relative overflow-hidden bg-map ${className}`} role="img" aria-label="결제 순위 1·2·3위 위치 지도">
       <div className="absolute inset-x-0 top-[37.5%] h-3.5 bg-white" />
@@ -75,24 +86,24 @@ function PlaceholderMap({ top3, className }: { top3: StoreView[]; className: str
       <div className="absolute inset-x-0 top-[71%] h-2 bg-[#F7F8FA]" />
       <div className="absolute inset-y-0 left-[74%] w-2 bg-[#F7F8FA]" />
       <div className="absolute left-[8%] top-[45%] h-[21%] w-1/4 rounded-lg bg-[#DDE6D8]" />
-      <div className="absolute left-[44%] top-[54%] size-[22px] rounded-full border-4 border-white bg-navy shadow-[0_0_0_8px_rgba(38,50,92,0.15)]" />
+      <div className="absolute left-[46%] top-[52%] size-[22px] -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-white bg-navy shadow-[0_0_0_8px_rgba(38,50,92,0.15)]" />
       {top3.map((s, i) => (
         <div
           key={s.key}
-          className={`absolute flex h-8 items-center rounded-full px-2.5 font-display text-[13px] ${
+          className={`absolute flex h-8 -translate-x-1/2 -translate-y-full items-center whitespace-nowrap rounded-full px-2.5 font-display text-[13px] ${
             i === 0 ? 'bg-primary text-white' : 'border-[1.5px] border-primary bg-white text-primary'
           }`}
-          style={PINS[i]}
+          style={pins[i]}
         >
           {i + 1}
           {i === 0 && ` ${s.name}`}
         </div>
       ))}
-      <span className="absolute bottom-3 right-3 text-[11px] text-sub">[지도] 네이버 지도 키 연결 전</span>
+      <span className="absolute bottom-3 right-3 text-[11px] text-sub">{center ? '위치는 결제 데이터 좌표 기준 · 네이버 지도 키 연결 전' : '[지도] 네이버 지도 키 연결 전'}</span>
     </div>
   );
 }
 
-export default function MapView({ top3, center = DEFAULT_CENTER, className = '' }: { top3: StoreView[]; center?: LatLng; className?: string }) {
-  return KEY_ID ? <NaverMap center={center} top3={top3} className={className} /> : <PlaceholderMap top3={top3} className={className} />;
+export default function MapView({ top3, center, className = '' }: { top3: StoreView[]; center?: LatLng; className?: string }) {
+  return KEY_ID ? <NaverMap center={center ?? DEFAULT_CENTER} top3={top3} className={className} /> : <PlaceholderMap top3={top3} center={center} className={className} />;
 }

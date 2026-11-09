@@ -8,7 +8,14 @@
 //    헤더 x-ncp-apigw-api-key-id / x-ncp-apigw-api-key  (주소만 찾고 장소 이름은 문서상 미지원)
 import 'server-only';
 
-export type ResolvedPlace = { name: string; address: string; lat: number; lng: number; source: 'search' | 'geocode' };
+export type ResolvedPlace = {
+  name: string;
+  address: string;      // 도로명 우선
+  jibun?: string;       // 지번 주소 (잇플 location 에 쓰는 '시 구 동' 을 여기서 뽑음)
+  lat: number;
+  lng: number;
+  source: 'search' | 'geocode' | 'kakao';
+};
 
 const strip = (s: string) => s.replace(/<[^>]+>/g, '');
 
@@ -35,7 +42,7 @@ async function searchLocal(query: string): Promise<ResolvedPlace | null> {
   if (!it) return null;
   const c = fromSearchCoord(it.mapx, it.mapy);
   if (!c) return null;
-  return { name: strip(it.title), address: it.roadAddress || it.address, ...c, source: 'search' };
+  return { name: strip(it.title), address: it.roadAddress || it.address, jibun: it.address, ...c, source: 'search' };
 }
 
 async function geocode(query: string): Promise<ResolvedPlace | null> {
@@ -50,10 +57,10 @@ async function geocode(query: string): Promise<ResolvedPlace | null> {
   const data = (await res.json()) as { addresses?: { roadAddress: string; jibunAddress: string; x: string; y: string }[] };
   const a = data.addresses?.[0];
   if (!a) return null;
-  return { name: query, address: a.roadAddress || a.jibunAddress, lat: Number(a.y), lng: Number(a.x), source: 'geocode' };
+  return { name: query, address: a.roadAddress || a.jibunAddress, jibun: a.jibunAddress, lat: Number(a.y), lng: Number(a.x), source: 'geocode' };
 }
 
-export async function resolvePlace(query: string): Promise<ResolvedPlace | null> {
+export async function resolveNaver(query: string): Promise<ResolvedPlace | null> {
   const q = query.trim().replace(/^\[|\]$/g, '');
   if (!q) return null;
   return (await searchLocal(q)) ?? (await geocode(q));

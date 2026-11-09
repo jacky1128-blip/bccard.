@@ -3,6 +3,7 @@
 // 탭을 누르면 제목·설명·기준·목록·안내 박스가 함께 바뀜
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import type { Mode } from '@/types/group';
 import type { StoreView } from '@/lib/view';
 import { MODES } from '@/lib/modes';
@@ -11,24 +12,33 @@ import { useNowMinutes } from '@/lib/useNowMinutes';
 import ModeChips, { syncModeToUrl } from './ModeChips';
 import Filters, { DEFAULT_FILTER, type FilterValue } from './Filters';
 import StoreCard from './StoreCard';
+import DemoNote from './DemoNote';
 import { BrandHeader, PageTitle, btn, t } from './ui';
 
 export default function RankingView({
   initialMode,
   storesByMode,
   fixedPlace,
+  placeLabel,
+  nearby = [],
+  live = true,
 }: {
   initialMode: Mode;
   storesByMode: Record<Mode, StoreView[]>;
-  fixedPlace?: string; // /r/[place] 처럼 장소가 정해진 경우
+  fixedPlace?: string; // /r/[place] · ?place= 처럼 장소를 고른 경우
+  placeLabel?: string; // 실제로 조회한 장소 이름
+  nearby?: string[];   // 근처 다른 역
+  live?: boolean;      // false면 예시 데이터
 }) {
+  const router = useRouter();
+  const [query, setQuery] = useState('');
   const [mode, setMode] = useState(initialMode);
   const [f, setF] = useState<FilterValue>(DEFAULT_FILTER);
   const [more, setMore] = useState(false);
   const now = useNowMinutes();
   const m = MODES[mode];
   const stores = storesByMode[mode];
-  const place = fixedPlace ?? m.place;
+  const place = fixedPlace ?? placeLabel ?? m.place;
 
   const changeMode = (x: Mode) => {
     setMode(x);
@@ -68,6 +78,19 @@ export default function RankingView({
         }
         desc={`${fixedPlace ? '고른 장소 기준' : m.placeNote} · 리뷰 말고 최근 1개월 BC카드 결제 기준`}
       />
+      <form
+        role="search"
+        className="-mt-2 flex gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          const v = query.trim();
+          if (v) router.push(`/ranking?mode=${mode}&place=${encodeURIComponent(v)}`);
+        }}
+      >
+        <input aria-label="다른 동네·역 검색" className={btn.field} value={query} onChange={(e) => setQuery(e.target.value)} placeholder="다른 동네·역 검색 (예: 성수역)" />
+        <button className={`${btn.smOutline} h-12`}>찾기</button>
+      </form>
+      {!live && <DemoNote />}
       <ModeChips variant="tabs" value={mode} onChange={changeMode} />
       <Filters value={f} onChange={setF} cats={cats} />
       <span className={`-mt-2 ${t.desc}`}>매출 높은 순 · 최대 10곳 · 이 상황 기준 {m.crit}</span>
@@ -103,14 +126,16 @@ export default function RankingView({
         <Link href={m.boxHref} className={btn.primary}>{m.boxBtn}</Link>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        <span className={`w-full ${t.desc}`}>근처 다른 역</span>
-        {['[근처역 1]', '[근처역 2]', '[근처역 3]'].map((s) => (
-          <Link key={s} href={`/r/${encodeURIComponent(s)}/${mode}`} className={btn.pillOff}>
-            {s}
-          </Link>
-        ))}
-      </div>
+      {nearby.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          <span className={`w-full ${t.desc}`}>근처 다른 역</span>
+          {nearby.map((s) => (
+            <Link key={s} href={`/r/${encodeURIComponent(s)}/${mode}`} className={btn.pillOff}>
+              {s}
+            </Link>
+          ))}
+        </div>
+      )}
     </>
   );
 }

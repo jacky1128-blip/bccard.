@@ -1,5 +1,5 @@
 // 데모용 예시 데이터 (와이어프레임과 같은 자리표시자). 실제 잇플 연결 전까지 화면 확인용.
-// 필드명(merNm 등)은 추정치라 첫 실제 응답을 보고 lib/view.ts 매핑만 고치면 됨.
+// 잇플이나 장소 조회가 실패했을 때만 쓰임 (lib/stores.ts 의 live:false).
 // _로 시작하는 필드는 잇플 응답이 아니라 데모에서 대신 채운 값(도보 시간·태그·AI 이유 예시).
 import type { EatplItem } from '@/types/eatpl';
 import type { Mode } from '@/types/group';
@@ -55,8 +55,8 @@ export function mockItems(mode: Mode = 'meal', limit = 10): EatplItem[] {
     const [srtTime, endTime] = split(hours);
     return {
       merUrl: '', // 실제 응답에서는 잇플 상세 링크. 데모는 비워둠
-      merNm, merTpbuzNm, srtTime, endTime, mainCust,
-      _key: `${mode}-${i}`, _walkMin: walk, _tags: tags, _reason: reason,
+      merNm, merTpbuzNm, srtTime, endTime, vistCstmrRnkList: { rk01: mainCust },
+      _key: `${mode}-${i}`, _walkMin: walk, _tags: tags, _reason: reason, _reasonBy: 'rule' as const,
     };
   });
 }

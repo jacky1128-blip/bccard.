@@ -67,7 +67,7 @@ export default function StoreCard({
         {store.tags.map((x) => <Tag key={x}>{x}</Tag>)}
         {highlight && <Tag blue>{highlight}</Tag>}
       </div>
-      {reason && <AiReason text={store.reason} />}
+      {reason && <AiReason text={store.reason} by={store.reasonBy} />}
       {action ? (
         <div className="grid grid-cols-2 gap-2">
           <EatplLink url={store.url} name={store.name} label={menuLabel} />
