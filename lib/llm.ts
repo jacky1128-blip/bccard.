@@ -7,8 +7,7 @@ import { cacheLife } from 'next/cache';
 import type { EatplItem } from '@/types/eatpl';
 import type { Mode } from '@/types/group';
 import { MODES } from './modes';
-import { cleanName, fanLabel, isAllDay } from './view';
-import { hhmm } from './time';
+import { fanLabel, isAllDay, roundHalfHour } from './view';
 
 const MODEL = process.env.LLM_MODEL || 'claude-opus-5-5';
 
@@ -22,21 +21,22 @@ export type ReasonContext = {
   headcount?: number;
 };
 
-// 모델에 넘기는 값: 잇플 응답 필드 중 화면에 공개되는 것만 (전화번호·좌표·링크 제외)
+// 모델에 넘기는 값: 근거로 쓸 수 있는 잇플 필드 + 계산한 거리만 (가게명·주소·전화번호·좌표·링크 제외)
+// merTpbuzNm, allSaleRnk, ccgSaleRnk, loclPrsnPpltYn, empyVsitYn, frnrVsitYn, srtTime, endTime,
+// hldyDwk, congestionDwk, congestionTizn, vistCstmrRnkList, 도보 분
 function facts(it: EatplItem, i: number) {
   const fans = [it.vistCstmrRnkList?.rk01, it.vistCstmrRnkList?.rk02, it.vistCstmrRnkList?.rk03].map(fanLabel).filter(Boolean);
   return {
     id: `s${i + 1}`,
-    가게명: cleanName(it.merNm),
     업종: it.merTpbuzNm ?? null,
     지역_매출_상위_퍼센트: it.ccgSaleRnk ?? null,
     전국_매출_상위_퍼센트: it.allSaleRnk ?? null,
     동네맛집: it.loclPrsnPpltYn ?? null,
     회식_적합: it.empyVsitYn ?? null,
     외국인_방문_많음: it.frnrVsitYn ?? null,
-    영업_예상_시간: isAllDay(it.srtTime, it.endTime) ? '24시간' : `${hhmm(it.srtTime) ?? '?'}~${hhmm(it.endTime) ?? '?'}`,
-    가장_붐비는_요일: it.congestionDwk ?? null,
-    가장_붐비는_시간대: it.congestionTizn ?? null,
+    영업_예상_시간: isAllDay(it.srtTime, it.endTime) ? '24시간' : `${roundHalfHour(it.srtTime) ?? '?'}~${roundHalfHour(it.endTime) ?? '?'}`,
+    결제가_가장_몰리는_요일: it.congestionDwk ?? null,
+    결제가_가장_몰리는_시간대: it.congestionTizn ?? null,
     휴무_요일: it.hldyDwk?.length ? it.hldyDwk : null,
     주요_고객층: fans.length ? fans : null,
     도보_분: it._walkMin ?? null,
@@ -45,7 +45,10 @@ function facts(it: EatplItem, i: number) {
 
 const SYSTEM = `너는 BC카드 결제 데이터(잇플)로 고른 식당 후보에 "왜 이 상황에 맞는지" 한국어로 짧게 설명하는 역할이다.
 규칙:
-- 근거는 각 가게에 주어진 필드뿐이다. 메뉴, 맛, 가격, 분위기, 좌석·룸, 주차, 예약, 리뷰, 별점처럼 주어지지 않은 정보는 절대 쓰지 않는다.
+- 근거는 각 가게에 주어진 필드뿐이다(업종, 지역·전국 매출 상위 %, 동네맛집, 회식 적합, 외국인 방문 많음, 영업 예상 시간, 휴무 요일, 결제가 가장 몰리는 요일·시간대, 주요 고객층, 도보 분).
+- 실시간 혼잡("지금 한산해요", "바로 앉을 수 있어요" 등), 메뉴, 좌석·룸·단체석, 가격, 맛 평가는 절대 쓰지 않는다. 분위기, 주차, 예약, 리뷰, 별점도 쓰지 않는다.
+- 붐비는 정보는 "최근 1개월 결제가 가장 몰리는 요일·시간대"라는 뜻이다. 지금 붐비는지/한산한지 단정하지 않는다.
+- 동네맛집이 false라고 "현지인이 적다", 외국인 방문이 false라고 "현지인이 많다"처럼 반대로 추론하지 않는다.
 - 숫자는 주어진 값 그대로 쓴다. 매출은 "지역 상위 N%"처럼 백분위로만 말하고 매출액을 말하지 않는다.
 - 영업시간은 결제 기록으로 추정한 "영업 예상 시간"이다. 확정 영업시간처럼 단정하지 않는다.
 - 못 먹는 음식은 업종 이름으로만 판단할 수 있다. 업종에서 알 수 없으면 언급하지 않는다.

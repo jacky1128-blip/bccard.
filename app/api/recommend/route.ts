@@ -17,6 +17,6 @@ export async function POST(req: Request) {
   const at = time ? toMinutes(time) ?? now.minutes : now.minutes;
   const cantEat = Array.isArray(body.cantEat) ? body.cantEat.filter((c): c is string => typeof c === 'string' && c in CANT_RULES) : [];
   const limit = Math.min(5, Math.max(1, Number(body.limit) || 3));
-  const r = await getCandidates({ place, mode, at, day: date ? dayOfDate(date) : now.dow, cantEat, limit, maxWalk: 20, when: `${date ?? '오늘'} ${time ?? '지금'}` });
+  const r = await getCandidates({ place, mode, at, day: date ? dayOfDate(date) : now.dow, cantEat, limit, maxWalk: 20, now: !date && !time, when: `${date ?? '오늘'} ${time ?? '지금'}` });
   return NextResponse.json(r);
 }

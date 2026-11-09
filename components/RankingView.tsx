@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import type { Mode } from '@/types/group';
 import type { StoreView } from '@/lib/view';
 import { MODES } from '@/lib/modes';
-import { isOpenAtMinutes } from '@/lib/time';
+import { isOpenAtMinutes, timeBucket } from '@/lib/time';
 import { useNowMinutes } from '@/lib/useNowMinutes';
 import ModeChips, { syncModeToUrl } from './ModeChips';
 import Filters, { DEFAULT_FILTER, type FilterValue } from './Filters';
@@ -55,9 +55,10 @@ export default function RankingView({
         (s) =>
           (!f.cat || s.cat === f.cat) &&
           (!f.near || (s.walkMin ?? 99) <= 10) &&
-          (!f.lessBusy || s.tags.some((x) => x.includes('덜 붐'))),
+          // 덜 붐비는 가게: 잇플 '가장 붐비는 시간대'가 지금 시간대가 아닌 곳
+          (!f.lessBusy || now == null || !s.busyTime || s.busyTime !== timeBucket(now)),
       ),
-    [stores, f],
+    [stores, f, now],
   );
   const isOpen = (s: StoreView) => now == null || isOpenAtMinutes(s.open, s.close, now) !== false;
   const list = f.openNow ? base.filter(isOpen) : base;
@@ -111,7 +112,7 @@ export default function RankingView({
         {shown.map((s) => <StoreCard key={s.key} store={s} showRank />)}
         {!more && list.length > 5 && (
           <button type="button" onClick={() => setMore(true)} className={btn.outline}>
-            6~{list.length}위 더 보기
+            {list.length > 6 ? `6~${list.length}위` : '6위'} 더 보기
           </button>
         )}
         {closed.length > 0 && (
@@ -121,7 +122,7 @@ export default function RankingView({
               <span className={t.desc}>여는 시간 확인하고 가요</span>
             </div>
             <div className="flex flex-col gap-2.5">
-              {closed.map((s) => <StoreCard key={s.key} store={s} showRank highlight={`${s.open} 오픈`} />)}
+              {closed.map((s) => <StoreCard key={s.key} store={s} showRank highlight={s.openAt ? `${s.openAt} 오픈 예상` : undefined} />)}
             </div>
           </>
         )}

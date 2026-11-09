@@ -50,6 +50,7 @@ async function findCandidates(g: { mode: Mode; place: string; date?: string | nu
     place: g.place,
     mode: g.mode,
     at: toMinutes(g.time ?? undefined) ?? undefined,
+    now: false,
     day: dayOfDate(g.date ?? undefined),
     cantEat: g.cantEat,
     limit: 3,

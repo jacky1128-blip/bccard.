@@ -18,7 +18,7 @@ async function Content({ searchParams }: { searchParams: Promise<SP> }) {
   const at = toMinutes(time)!;
 
   const r = await getCandidates({
-    place, mode: 'event', at, day: dayOfDate(date), after, maxWalk: 15, limit: 3,
+    place, mode: 'event', at, day: dayOfDate(date), after, maxWalk: 15, limit: 3, now: false,
     when: `${date ?? ''} ${after ? '끝나는 시간' : '시작 시간'} ${time}`.trim(),
   });
 

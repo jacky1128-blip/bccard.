@@ -56,7 +56,7 @@ export default function TravelForm() {
 
         <Section title="3. 어떤 곳?">
           <div className="flex flex-wrap gap-1.5">
-            <button type="button" aria-pressed={local} onClick={() => setLocal(!local)} className={local ? btn.pillOn : btn.pillOff}>현지인 결제 많은 곳</button>
+            <button type="button" aria-pressed={local} onClick={() => setLocal(!local)} className={local ? btn.pillOn : btn.pillOff}>동네맛집만</button>
             <button type="button" aria-pressed={near} onClick={() => setNear(!near)} className={near ? btn.pillOn : btn.pillOff}>역에서 가까운 곳</button>
             <button type="button" className={btn.pillOff}>업종 전체 ▾</button>
           </div>

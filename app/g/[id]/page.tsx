@@ -31,7 +31,7 @@ async function Room({ params, searchParams }: { params: Promise<{ id: string }>;
   const when = formatWhen(date, time) || m.when;
   const r = await getCandidates({
     place: q(sp, 'place') ?? m.place, mode, at: toMinutes(time) ?? undefined, day: dayOfDate(date),
-    limit: 3, maxWalk: 20, when, headcount,
+    limit: 3, maxWalk: 20, when, headcount, now: false,
   });
   const host = q(sp, 'host') === '1';
   const initial: GroupState = {

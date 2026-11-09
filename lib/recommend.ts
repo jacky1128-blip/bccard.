@@ -3,7 +3,7 @@
 import type { EatplItem } from '@/types/eatpl';
 import type { Mode } from '@/types/group';
 import { isOpenAtMinutes, timeBucket, toMinutes } from './time';
-import { fanLabel, isAllDay } from './view';
+import { buildTags, fanLabel, isAllDay } from './view';
 
 // 한 끼 서비스라 식사가 아닌 업종은 뺌
 const NOT_MEAL = /카페|커피|디저트|베이커리|제과|빵|아이스크림|빙수|음료|주스|차 ?전문|떡집|편의점|도넛|와플|케이크|마카롱/;
@@ -23,6 +23,8 @@ export type PickOptions = {
   limit?: number;
   maxWalk?: number;       // 도보 분 상한
   after?: boolean;        // 경기·공연 끝나고: 기준 시각 이후 1시간 이상 영업해야 함
+  now?: boolean;          // 기준 시각이 지금인지 (태그 "지금은" / "그 시간은")
+  localOnly?: boolean;    // 동네맛집(loclPrsnPpltYn)만 (여행 "현지인 맛집")
 };
 
 const closeAfter = (it: EatplItem, at: number, minutes: number) => {
@@ -46,6 +48,7 @@ export function passes(it: EatplItem, o: PickOptions) {
   if (o.at != null && isOpenAtMinutes(it.srtTime, it.endTime, o.at) === false) return false;
   if (o.after && o.at != null && !closeAfter(it, o.at, 60)) return false;
   if (o.maxWalk != null && (it._walkMin ?? 0) > o.maxWalk) return false;
+  if (o.localOnly && it.loclPrsnPpltYn !== true) return false;
   return true;
 }
 
@@ -69,32 +72,17 @@ export function pickCandidates(items: EatplItem[], o: PickOptions): EatplItem[] 
     .filter(({ it }) => passes(it, o))
     .sort((a, b) => score(a.it, a.idx, o) - score(b.it, b.idx, o))
     .slice(0, o.limit ?? 3)
-    .map(({ it }) => ({ ...it, _tags: tagsFor(it, o) }));
+    .map(({ it }) => ({ ...it, _tags: buildTags(it, { ...o, peers: items }) }));
 }
 
-/* ---------- 태그 · 규칙 기반 이유 (잇플 필드만 사용) ---------- */
-
-export function tagsFor(it: EatplItem, o: Pick<PickOptions, 'mode' | 'at' | 'day'>): string[] {
-  const tags: string[] = [];
-  if (it.empyVsitYn) tags.push('회식 적합');
-  if (it.loclPrsnPpltYn) tags.push('동네맛집');
-  if (it.frnrVsitYn) tags.push('외국인 많이 와요');
-  if (o.at != null) {
-    if (isBusyAt(it, o.at, o.day)) tags.push('붐비는 시간대');
-    else if (it.congestionTizn) tags.push('덜 붐비는 시간');
-  } else if (it.congestionDwk && it.congestionTizn) {
-    tags.push(`${it.congestionDwk} ${it.congestionTizn} 붐벼요`);
-  }
-  if (isAllDay(it.srtTime, it.endTime)) tags.push('24시간');
-  return tags.slice(0, 3);
-}
+/* ---------- 규칙 기반 이유 (잇플 필드만 사용 · 태그는 lib/view.ts buildTags) ---------- */
 
 const pct = (n?: number) => (n == null ? undefined : `${n}%`);
 
-// 받침 있으면 '이라', 없으면 '라' (점심이라 · 심야라)
-const iRa = (w: string) => {
+// 받침 있으면 '이에요', 없으면 '예요' (점심이에요 · 심야예요)
+const iEyo = (w: string) => {
   const c = w.charCodeAt(w.length - 1) - 0xac00;
-  return c >= 0 && c < 11172 && c % 28 !== 0 ? '이라' : '라';
+  return c >= 0 && c < 11172 && c % 28 !== 0 ? '이에요' : '예요';
 };
 
 export function ruleReason(it: EatplItem, o: { mode: Mode; at?: number; day?: string; area?: string }): string {
@@ -102,9 +90,14 @@ export function ruleReason(it: EatplItem, o: { mode: Mode; at?: number; day?: st
   const cat = it.merTpbuzNm ? `${it.merTpbuzNm} ` : '';
   if (it.ccgSaleRnk != null) parts.push(`${o.area ? `${o.area} ` : ''}${cat}결제 지역 상위 ${pct(it.ccgSaleRnk)}예요.`);
   if (o.mode === 'party' && it.empyVsitYn) parts.push('회식 적합으로 분류된 곳이에요.');
-  else if (it.loclPrsnPpltYn && (o.mode === 'travel' || o.mode === 'meal')) parts.push('동네 사람들이 실제로 많이 결제하는 동네맛집이에요.');
+  else if (it.loclPrsnPpltYn && (o.mode === 'travel' || o.mode === 'meal')) parts.push('잇플에서 동네맛집으로 분류된 곳이에요.');
   if (o.at != null && it.congestionTizn) {
-    parts.push(isBusyAt(it, o.at, o.day) ? `${it.congestionTizn} 시간대가 가장 붐벼요.` : `가장 붐비는 건 ${it.congestionDwk ?? ''} ${it.congestionTizn}${iRa(it.congestionTizn)} 이 시간은 비교적 여유 있어요.`.replace('  ', ' '));
+    // 잇플의 '가장 붐비는 요일·시간대'(최근 1개월 결제 기준)만 말함. 실시간 혼잡처럼 말하지 않음
+    parts.push(
+      it.congestionTizn === timeBucket(o.at)
+        ? `결제가 가장 몰리는 시간대가 ${it.congestionTizn}${iEyo(it.congestionTizn)}.`
+        : `결제가 가장 몰리는 때는 ${it.congestionDwk ? `${it.congestionDwk}요일 ` : ''}${it.congestionTizn}${iEyo(it.congestionTizn)}.`,
+    );
   }
   const fan = fanLabel(it.vistCstmrRnkList?.rk01);
   if (fan && parts.length < 3) parts.push(`${fan} 손님이 가장 많아요.`);
@@ -113,7 +106,7 @@ export function ruleReason(it: EatplItem, o: { mode: Mode; at?: number; day?: st
 
 /* ---------- 순위 화면용: 응답 하나로 상황 4개 목록 ---------- */
 
-export function rankForMode(items: EatplItem[], mode: Mode, o: { at?: number; day?: string; limit?: number } = {}): EatplItem[] {
+export function rankForMode(items: EatplItem[], mode: Mode, o: { at?: number; day?: string; limit?: number; now?: boolean } = {}): EatplItem[] {
   const base = items.filter((it) => !NOT_MEAL.test(it.merTpbuzNm ?? ''));
   const sorted = [...base].sort((a, b) => {
     const boost = (it: EatplItem) =>
@@ -122,5 +115,5 @@ export function rankForMode(items: EatplItem[], mode: Mode, o: { at?: number; da
       (mode === 'event' && (isAllDay(it.srtTime, it.endTime) || (toMinutes(it.endTime) ?? 0) <= (toMinutes(it.srtTime) ?? 0)) ? -1 : 0);
     return boost(a) - boost(b); // 같은 그룹 안에서는 원래 매출 순서 유지 (stable sort)
   });
-  return sorted.slice(0, o.limit ?? 10).map((it) => ({ ...it, _tags: tagsFor(it, { mode, at: o.at, day: o.day }), _reason: ruleReason(it, { mode, at: o.at, day: o.day }), _reasonBy: 'rule' as const }));
+  return sorted.slice(0, o.limit ?? 10).map((it) => ({ ...it, _tags: buildTags(it, { mode, at: o.at, day: o.day, now: o.now, peers: items }), _reason: ruleReason(it, { mode, at: o.at, day: o.day }), _reasonBy: 'rule' as const }));
 }
