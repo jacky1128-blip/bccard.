@@ -1,0 +1,95 @@
+{
+  "_note": "2026-11-10 실제 응답 (GET /v1/bccard-eatpl/search?location=역삼동, 100건 중 앞 3건, 전화번호 가림)",
+  "items": [
+    {
+      "merNm": "(주)전한강강술래역삼점",
+      "merAddr": "서울 강남구 논현로 325 (역삼동)",
+      "merTpno": "(전화번호 가림)",
+      "merTpbuzNm": "고기구이",
+      "allSaleRnk": 0.1,
+      "ccgSaleRnk": 0.12,
+      "loclPrsnPpltYn": true,
+      "merUrl": "https://web.paybooc.ai/mer/web/profile/KwSIc12L3tI3fHrkfwdg",
+      "srtTime": "1035",
+      "endTime": "2153",
+      "frnrVsitYn": false,
+      "empyVsitYn": false,
+      "hldyDwk": [],
+      "congestionDwk": "목",
+      "congestionTizn": "점심",
+      "vistCstmrRnkList": {
+        "rk01": "60대이상여성",
+        "rk02": "60대이상남성",
+        "rk03": "50대남성"
+      },
+      "xaxsVal": "315259",
+      "yaxsVal": "543986"
+    },
+    {
+      "merNm": "(주)씨앤코컴퍼니",
+      "merAddr": "서울 강남구 역삼로17길 60 ,3층 (역삼동,케이에스빌딩)",
+      "merTpno": "(전화번호 가림)",
+      "merTpbuzNm": "카페",
+      "allSaleRnk": 0.11,
+      "ccgSaleRnk": 0.25,
+      "loclPrsnPpltYn": false,
+      "merUrl": "https://web.paybooc.ai/mer/web/profile/xO5svdIQbwEMGSa048YNnQ",
+      "srtTime": "0736",
+      "endTime": "1923",
+      "frnrVsitYn": false,
+      "empyVsitYn": false,
+      "hldyDwk": [],
+      "congestionDwk": "목",
+      "congestionTizn": "오전",
+      "vistCstmrRnkList": {
+        "rk01": "20대남성",
+        "rk02": "20대여성",
+        "rk03": "50대여성"
+      },
+      "xaxsVal": "315000",
+      "yaxsVal": "544482"
+    },
+    {
+      "merNm": "투썸 2.0 강남",
+      "merAddr": "서울 강남구 강남대로 468 지상 1층 (역삼동, 충림빌딩)",
+      "merTpno": "(전화번호 가림)",
+      "merTpbuzNm": "카페",
+      "allSaleRnk": 0.15,
+      "ccgSaleRnk": 0.32,
+      "loclPrsnPpltYn": false,
+      "merUrl": "https://web.paybooc.ai/mer/web/profile/O17O6LihhUPrZ5KskNyuAw",
+      "srtTime": "0658",
+      "endTime": "0139",
+      "frnrVsitYn": false,
+      "empyVsitYn": false,
+      "hldyDwk": [],
+      "congestionDwk": "금",
+      "congestionTizn": "저녁",
+      "vistCstmrRnkList": {
+        "rk01": "20대여성",
+        "rk02": "30대여성",
+        "rk03": "30대남성"
+      },
+      "xaxsVal": "314003",
+      "yaxsVal": "545110"
+    }
+  ],
+  "query": {
+    "location": "역삼동",
+    "merNm": null,
+    "merTpbuzNm": null
+  },
+  "attribution": "eat.pl 잇플 · BC카드 결제 데이터 기반",
+  "upstream": {
+    "status_code": 200,
+    "provider": "bccard-eatpl"
+  },
+  "proxy": {
+    "name": "k-skill-proxy",
+    "cache": {
+      "hit": false,
+      "ttl_ms": 300000
+    },
+    "requested_at": "2026-11-09T15:54:40.692Z"
+  }
+}
