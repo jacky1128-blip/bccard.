@@ -22,18 +22,16 @@ type NaverMaps = {
   Marker: new (opts: Record<string, unknown>) => NaverMarker;
   Event: { addListener: (target: unknown, type: string, fn: () => void) => unknown };
 };
-type NaverMarker = { setMap: (m: unknown) => void; setIcon: (icon: unknown) => void; setZIndex: (z: number) => void };
+type NaverMarker = { setMap: (m: unknown) => void; setIcon: (icon: unknown) => void; setZIndex: (z: number) => void; getElement?: () => HTMLElement | null };
 declare global {
   interface Window { naver?: { maps: NaverMaps }; navermap_authFailure?: () => void }
 }
 
-// 핀: 처음엔 셋 다 숫자만, 누른 핀만 파란색 "번호 가게명"
+// 핀: 처음엔 셋 다 숫자만, 누르면 숫자 원에서 오른쪽으로 늘어나며 가게 이름 (모양·움직임은 globals.css .bk-pin)
+// 선택이 바뀔 때 HTML 을 갈아 끼우지 않고 클래스만 바꿔야 늘어나는 애니메이션이 보임
 function pinHtml(rank: number, name: string, selected: boolean) {
-  const style = selected
-    ? 'background:#2F54EB;color:#fff;padding:0 12px;box-shadow:0 4px 12px rgba(47,84,235,.35);'
-    : 'background:#fff;color:#2F54EB;border:1.5px solid #2F54EB;width:32px;justify-content:center;';
   const safe = name.replace(/[<>&"]/g, '');
-  return `<div style="${style}height:32px;border-radius:999px;display:flex;align-items:center;font-family:var(--font-display);font-size:13px;white-space:nowrap;cursor:pointer;transform:translate(-50%,-100%)">${rank}${selected ? ` ${safe}` : ''}</div>`;
+  return `<div class="bk-pin${selected ? ' is-on' : ''}" data-rank="${rank}"><span class="bk-pin__num">${rank}</span><span class="bk-pin__name">${safe}</span></div>`;
 }
 
 type PinProps = { selected?: string | null; onSelect?: (key: string | null) => void };
@@ -129,7 +127,10 @@ function NaverMap({ center, top3, className, onAuthFail, selected, onSelect }: {
       if (!m) continue;
       const sel = selected === s.key;
       try {
-        m.setIcon({ content: pinHtml(s.rank, s.name, sel) });
+        // 클래스만 바꿔서 CSS 로 부드럽게 펼침 (요소를 못 찾으면 아이콘 교체로 대신)
+        const pin = m.getElement?.()?.querySelector('.bk-pin');
+        if (pin) pin.classList.toggle('is-on', sel);
+        else m.setIcon({ content: pinHtml(s.rank, s.name, sel) });
         m.setZIndex(sel ? 100 : 10 - s.rank);
       } catch {
         /* SDK 오류는 무시 */
@@ -197,13 +198,11 @@ function PlaceholderMap({ top3, center, className, note, selected, onSelect }: {
             aria-pressed={sel}
             aria-label={`${i + 1}위 ${s.name}`}
             onClick={() => onSelect?.(sel ? null : s.key)}
-            className={`absolute flex h-8 -translate-x-1/2 -translate-y-full items-center justify-center whitespace-nowrap rounded-full font-display text-[13px] ${
-              sel ? 'z-10 bg-primary px-3 text-white shadow-[0_4px_12px_rgba(47,84,235,0.35)]' : 'w-8 border-[1.5px] border-primary bg-white text-primary'
-            }`}
+            className={`bk-pin absolute ${sel ? 'is-on z-10' : ''}`}
             style={pins[i]}
           >
-            {i + 1}
-            {sel && ` ${s.name}`}
+            <span className="bk-pin__num">{i + 1}</span>
+            <span className="bk-pin__name">{s.name}</span>
           </button>
         );
       })}

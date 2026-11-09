@@ -66,3 +66,52 @@
 
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; }
+
+/* 지도 핀: 숫자 원에서 오른쪽으로 늘어나며 가게 이름이 나옴 (네이버 지도·자리표시 지도 공통) */
+.bk-pin {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  border-radius: 999px;
+  border: 1.5px solid #2f54eb;
+  background: #fff;
+  color: #2f54eb;
+  font-family: var(--font-display);
+  font-size: 13px;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  overflow: hidden;
+  /* 숫자 원의 가운데가 가게 위치 → 오른쪽으로만 펼쳐짐 */
+  transform: translate(-16px, -100%);
+  transition: background-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+}
+.bk-pin__num {
+  width: 29px;
+  flex: none;
+  text-align: center;
+}
+.bk-pin__name {
+  max-width: 0;
+  opacity: 0;
+  padding-right: 0;
+  overflow: hidden;
+  transition: max-width 0.32s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s ease, padding-right 0.32s ease;
+}
+.bk-pin.is-on {
+  background: #2f54eb;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(47, 84, 235, 0.35);
+}
+.bk-pin.is-on .bk-pin__name {
+  max-width: 180px;
+  opacity: 1;
+  padding-right: 12px;
+  transition-delay: 0s, 0.06s, 0s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .bk-pin,
+  .bk-pin__name {
+    transition: none;
+  }
+}
