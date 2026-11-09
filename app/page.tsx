@@ -13,7 +13,7 @@ async function Home({ searchParams }: { searchParams: Promise<SP> }) {
   const mode = toMode(q(sp, 'mode'));
   const { minutes, dow } = kstNow();
   const r = await getStoresByMode(q(sp, 'place') ?? DEFAULT_PLACE, { at: minutes, day: dow, limit: 3 });
-  return <HomeView initialMode={mode} storesByMode={r.storesByMode} center={r.center} placeLabel={r.label} live={r.live} notFound={r.notFound} />;
+  return <HomeView initialMode={mode} storesByMode={r.storesByMode} center={r.center} placeLabel={r.label} live={r.live} notFound={r.notFound} defaultPlace={!q(sp, 'place')} />;
 }
 
 export default function Page({ searchParams }: PageProps<'/'>) {

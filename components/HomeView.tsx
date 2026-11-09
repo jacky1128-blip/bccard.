@@ -1,6 +1,6 @@
 'use client';
 // A0 첫 화면 본문: 상황 칩을 누르면 지도 핀·TOP 3·하단 버튼이 함께 바뀜
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { Mode } from '@/types/group';
@@ -19,6 +19,7 @@ export default function HomeView({
   placeLabel,
   live = true,
   notFound = false,
+  defaultPlace = false,
 }: {
   initialMode: Mode;
   storesByMode: Record<Mode, StoreView[]>;
@@ -26,10 +27,12 @@ export default function HomeView({
   placeLabel?: string;
   live?: boolean;
   notFound?: boolean;
+  defaultPlace?: boolean; // 주소에 place 가 없어 기본 위치(역삼역)로 보여주는 중
 }) {
   const router = useRouter();
   const [mode, setMode] = useState(initialMode);
   const [locating, setLocating] = useState(false);
+  const [geoFail, setGeoFail] = useState(false);
   const m = MODES[mode];
   const top3 = storesByMode[mode].slice(0, 3);
   const place = placeLabel ?? m.place;
@@ -50,6 +53,20 @@ export default function HomeView({
       { enableHighAccuracy: false, timeout: 8000, maximumAge: 60_000 },
     );
   };
+
+  // 처음 열었을 때(장소 지정 없음) 바로 내 위치로. 권한 거부·실패하면 기본 위치(역삼역) 그대로 + 안내
+  useEffect(() => {
+    if (!defaultPlace) return;
+    if (!('geolocation' in navigator)) {
+      queueMicrotask(() => setGeoFail(true));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => router.replace(`/?mode=${initialMode}&place=${pos.coords.latitude.toFixed(4)},${pos.coords.longitude.toFixed(4)}`),
+      () => setGeoFail(true),
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 5 * 60_000 },
+    );
+  }, [defaultPlace, initialMode, router]);
 
   return (
     <main className="relative flex flex-1 flex-col">
@@ -93,7 +110,12 @@ export default function HomeView({
         </div>
         <h2 className={`-mt-1.5 ${t.sheetTitle}`}>{m.homeTitle}</h2>
         <span className={`-mt-1.5 ${t.desc}`}>
-          {locating ? '내 위치 찾는 중… · ' : placeLabel && placeLabel !== '내 위치' ? '' : `${place} 기준 · `}지도의 번호와 같아요. 최근 1개월 BC카드 결제 정보를 참고했어요.
+          {locating || (defaultPlace && !geoFail)
+            ? `내 위치 찾는 중… 잠시 ${place} 기준으로 보여드려요 · `
+            : defaultPlace
+              ? `내 위치를 가져오지 못해 기본 위치(${place}) 기준이에요 · 오른쪽 위 ⊙ 버튼이나 검색으로 바꿀 수 있어요 · `
+              : ''}
+          지도의 번호와 같아요. 최근 1개월 BC카드 결제 정보를 참고했어요.
         </span>
         {!live && <DemoNote notFound={notFound} place={place} />}
         <div className="flex flex-col">
