@@ -4,11 +4,28 @@ import EatplLink from './EatplLink';
 import { Meta } from './StoreCard';
 import { t } from './ui';
 
-// 첫 화면 TOP 3 줄
-export function TopRow({ store }: { store: StoreView }) {
+// 첫 화면 TOP 3 줄. 지도 핀과 연결: 핀을 누르면 이 줄이 강조되고, 줄을 누르면 그 핀이 펼쳐짐
+export function TopRow({ store, active = false, onSelect }: { store: StoreView; active?: boolean; onSelect?: () => void }) {
   return (
-    <div className="flex items-center gap-2.5 border-b border-line py-2.5">
-      <span className={`w-5 text-base font-black text-primary ${t.num}`}>{store.rank}</span>
+    <div
+      role={onSelect ? 'button' : undefined}
+      tabIndex={onSelect ? 0 : undefined}
+      aria-pressed={onSelect ? active : undefined}
+      onClick={(e) => {
+        if ((e.target as HTMLElement).closest('a')) return; // 메뉴 보기는 그대로 잇플로
+        onSelect?.();
+      }}
+      onKeyDown={(e) => {
+        if (onSelect && (e.key === 'Enter' || e.key === ' ') && !(e.target as HTMLElement).closest('a')) {
+          e.preventDefault();
+          onSelect();
+        }
+      }}
+      className={`-mx-2.5 flex items-center gap-2.5 rounded-xl border-b border-line px-2.5 py-2.5 transition-colors ${
+        onSelect ? 'cursor-pointer' : ''
+      } ${active ? 'border-transparent bg-primary-soft' : ''}`}
+    >
+      <span className={`w-5 text-base font-black ${active ? 'text-primary-ink' : 'text-primary'} ${t.num}`}>{store.rank}</span>
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className={t.storeSm}>{store.name}</span>
         <Meta parts={[store.cat, store.walk, `지역 상위 ${store.localRank ?? '[N]'}%`]} />

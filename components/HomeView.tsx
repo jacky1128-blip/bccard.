@@ -1,6 +1,6 @@
 'use client';
 // A0 첫 화면 본문: 상황 칩을 누르면 지도 핀·TOP 3·하단 버튼이 함께 바뀜
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { Mode } from '@/types/group';
@@ -34,7 +34,16 @@ export default function HomeView({
   const [locating, setLocating] = useState(false);
   const [geoFail, setGeoFail] = useState(false);
   const m = MODES[mode];
-  const top3 = storesByMode[mode].slice(0, 3);
+  const top3 = useMemo(() => storesByMode[mode].slice(0, 3), [storesByMode, mode]);
+  // 지도 핀 ↔ TOP 3 줄 연결 (누른 가게)
+  const [picked, setPicked] = useState<string | null>(null);
+  const selected = top3.some((s) => s.key === picked) ? picked : null;
+  const rowsRef = useRef<HTMLDivElement>(null);
+  const pickFromMap = (key: string | null) => {
+    setPicked(key);
+    // 시트에서 그 줄이 보이게
+    if (key) rowsRef.current?.querySelector(`[data-key="${CSS.escape(key)}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  };
   const place = placeLabel ?? m.place;
   const placeQs = placeLabel ? `&place=${encodeURIComponent(placeLabel === '내 위치' && center ? `${center.lat},${center.lng}` : placeLabel)}` : '';
 
@@ -80,7 +89,7 @@ export default function HomeView({
 
   return (
     <main className="relative flex flex-1 flex-col">
-      <MapView top3={top3} center={center} className="h-[460px] shrink-0" />
+      <MapView top3={top3} center={center} className="h-[460px] shrink-0" selected={selected} onSelect={pickFromMap} />
 
       {/* 지도 위 검색 + 상황 칩 */}
       <div className="absolute inset-x-4 top-4 flex flex-col gap-2.5">
@@ -128,8 +137,12 @@ export default function HomeView({
           지도의 번호와 같아요. 최근 1개월 BC카드 결제 정보를 참고했어요.
         </span>
         {!live && <DemoNote notFound={notFound} place={place} />}
-        <div className="flex flex-col">
-          {top3.map((s) => <TopRow key={s.key} store={s} />)}
+        <div ref={rowsRef} className="flex flex-col">
+          {top3.map((s) => (
+            <div key={s.key} data-key={s.key}>
+              <TopRow store={s} active={selected === s.key} onSelect={() => setPicked(selected === s.key ? null : s.key)} />
+            </div>
+          ))}
         </div>
         <div className="mt-auto flex flex-col gap-1.5 pt-2">
           <Link href={m.ctaHref.includes('?') ? `${m.ctaHref}${placeQs}` : m.ctaHref} className={btn.primary}>{m.cta}</Link>
