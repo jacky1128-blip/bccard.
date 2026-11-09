@@ -79,7 +79,10 @@ export type ByModeResult = Omit<StoresResult, 'stores'> & { storesByMode: Record
 export async function getStoresByMode(placeInput: string, o: { at?: number; day?: string; limit?: number } = {}): Promise<ByModeResult> {
   const label = cleanPlace(placeInput);
   try {
-    const { place, items } = await loadArea(placeInput);
+    const { place, items: all } = await loadArea(placeInput);
+    // 법정동이 넓으면(예: 신림동) 30~40분 거리 가게가 섞임 → "내 주변"답게 도보 20분 안, 모자라면 30분 안, 그래도 모자라면 전체
+    const within = (min: number) => all.filter((it) => it._walkMin == null || it._walkMin <= min);
+    const items = [20, 30].map(within).find((xs) => xs.length >= 10) ?? all;
     const storesByMode = Object.fromEntries(MODE_ORDER.map((m) => [m, toViews(rankForMode(items, m, o))])) as Record<Mode, StoreView[]>;
     return { live: true, label, center: { lat: place.lat, lng: place.lng }, region: place.region, storesByMode };
   } catch (e) {

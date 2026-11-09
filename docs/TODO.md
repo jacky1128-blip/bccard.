@@ -105,6 +105,16 @@
 - 좌표: 잇플 TM128 → WGS84 변환을 카카오 주소 검색과 비교, 3개 동 7곳 평균 10m·최대 24m (가게 주소 지오코딩 안 함)
 - AI 추천 이유: 근거 필드 목록 고정, 실시간 혼잡·메뉴·좌석·가격·맛 언급 금지 (`lib/llm.ts`)
 
+### 2-1-2. 네이버 키 연결 ✅ (2026-11-10)
+
+- 장소 검색: **NAVER API HUB 지역 검색** `GET https://naverapihub.apigw.ntruss.com/search/v1/local` (헤더 `x-ncp-apigw-api-key-id`/`x-ncp-apigw-api-key`, `NAVER_SEARCH_CLIENT_ID`/`_SECRET`). mapx/mapy = 위경도 × 10,000,000 확인. "○○역"은 지하철역 결과, "○○동"은 주소에 그 동이 있는 결과 우선
+- 잇플 location은 시·도 짧은 이름으로 바꿔서 넣음 ("서울특별시 강남구 역삼동" 14건 → "서울 강남구 역삼동" 100건). `lib/places.ts` `SIDO`
+- 지도: `maps.js?ncpKeyId=` (최신 문서 기준 맞음), localhost:3000 인증 정상. 내 위치 + TOP 3가 다 보이게 자동 확대, 인증 실패 시 자리표시 지도로
+- 첫 화면·순위: 도보 20분 안 우선(모자라면 30분), 오늘 밥 한 끼·여행은 술집·주류판매점을 뒤로
+- [ ] **네이버 클라우드 콘솔 → Application 수정 → `Geocoding`, `Reverse Geocoding` 선택** (지금 403). 그 전까지 내 위치는 카카오로 자동 대체
+- [ ] `NAVER_MAP_KEY`, `NAVER_SEARCH_CLIENT_SECRET` 재발급 (2026-11-10 작업 중 대화 기록에 노출됨) → 새 값으로 `.env.local` 교체
+- [ ] 배포 도메인이 생기면 Application의 Web 서비스 URL에 추가 (호스트만, 포트·경로 제외)
+
 ### 2-2. 키 없이 바로 할 수 있는 남은 개발
 
 | 할 일 | 지금 | 관련 파일 |

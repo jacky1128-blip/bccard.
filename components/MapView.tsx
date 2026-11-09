@@ -1,7 +1,7 @@
 'use client';
 // 네이버 지도 + 결제 순위 핀
 // NEXT_PUBLIC_NAVER_MAP_KEY_ID 가 있으면 네이버 지도 JS v3, 없으면 와이어프레임 그대로의 자리표시 지도
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Script from 'next/script';
 import type { StoreView } from '@/lib/view';
 
@@ -12,12 +12,17 @@ type LatLng = { lat: number; lng: number };
 
 /* ---------- 네이버 지도 (최소 타입) ---------- */
 type NaverMaps = {
-  Map: new (el: HTMLElement, opts: Record<string, unknown>) => { setCenter: (c: unknown) => void; destroy?: () => void };
+  Map: new (el: HTMLElement, opts: Record<string, unknown>) => {
+    setCenter: (c: unknown) => void;
+    fitBounds: (b: unknown, margin?: { top: number; right: number; bottom: number; left: number }) => void;
+    destroy?: () => void;
+  };
   LatLng: new (lat: number, lng: number) => unknown;
+  LatLngBounds: new (sw: unknown, ne: unknown) => unknown;
   Marker: new (opts: Record<string, unknown>) => { setMap: (m: unknown) => void };
 };
 declare global {
-  interface Window { naver?: { maps: NaverMaps } }
+  interface Window { naver?: { maps: NaverMaps }; navermap_authFailure?: () => void }
 }
 
 function pinHtml(rank: number, name: string) {
@@ -28,8 +33,19 @@ function pinHtml(rank: number, name: string) {
   return `<div style="${style}height:32px;padding:0 10px;border-radius:999px;display:flex;align-items:center;font-family:var(--font-display);font-size:13px;white-space:nowrap;transform:translate(-50%,-100%)">${rank}${first ? ` ${name}` : ''}</div>`;
 }
 
-function NaverMap({ center, top3, className }: { center: LatLng; top3: StoreView[]; className: string }) {
+function NaverMap({ center, top3, className, onAuthFail }: { center: LatLng; top3: StoreView[]; className: string; onAuthFail: () => void }) {
   const el = useRef<HTMLDivElement>(null);
+
+  // 키·Web 서비스 URL 인증 실패 시 네이버가 이 전역 함수를 부름 → 자리표시 지도로
+  useEffect(() => {
+    window.navermap_authFailure = () => {
+      console.error('[naver map] 인증 실패: ncpKeyId 값 또는 콘솔 Application 의 Web 서비스 URL(현재 주소의 호스트) 등록 확인');
+      onAuthFail();
+    };
+    return () => {
+      window.navermap_authFailure = undefined;
+    };
+  }, [onAuthFail]);
   const [ready, setReady] = useState(typeof window !== 'undefined' && !!window.naver?.maps);
 
   useEffect(() => {
@@ -46,6 +62,16 @@ function NaverMap({ center, top3, className }: { center: LatLng; top3: StoreView
         .filter((s) => s.lat != null && s.lng != null)
         .map((s) => new maps.Marker({ position: new maps.LatLng(s.lat!, s.lng!), map, icon: { content: pinHtml(s.rank, s.name) } })),
     ];
+    // 내 위치 + 핀이 모두 보이게 (위쪽은 검색창·상황 칩, 아래쪽은 시트가 덮으니 그만큼 여백)
+    const pts = [{ lat: center.lat, lng: center.lng }, ...top3.filter((s) => s.lat != null && s.lng != null).map((s) => ({ lat: s.lat!, lng: s.lng! }))];
+    if (pts.length > 1) {
+      const lats = pts.map((p) => p.lat);
+      const lngs = pts.map((p) => p.lng);
+      map.fitBounds(
+        new maps.LatLngBounds(new maps.LatLng(Math.min(...lats), Math.min(...lngs)), new maps.LatLng(Math.max(...lats), Math.max(...lngs))),
+        { top: 230, right: 70, bottom: 80, left: 70 },
+      );
+    }
     return () => {
       markers.forEach((m) => m.setMap(null));
       map.destroy?.();
@@ -93,7 +119,7 @@ function pinPositions(top3: StoreView[], center?: LatLng) {
   return placed.map((p) => ({ left: `${Math.round(p.left)}%`, top: `${Math.round(p.top)}%` }));
 }
 
-function PlaceholderMap({ top3, center, className }: { top3: StoreView[]; center?: LatLng; className: string }) {
+function PlaceholderMap({ top3, center, className, note }: { top3: StoreView[]; center?: LatLng; className: string; note?: string }) {
   const pins = pinPositions(top3, center);
   return (
     <div className={`relative overflow-hidden bg-map ${className}`} role="img" aria-label="결제 순위 1·2·3위 위치 지도">
@@ -115,11 +141,17 @@ function PlaceholderMap({ top3, center, className }: { top3: StoreView[]; center
           {i === 0 && ` ${s.name}`}
         </div>
       ))}
-      <span className="absolute bottom-3 right-3 text-[11px] text-sub">{center ? '위치는 결제 데이터 좌표 기준 · 네이버 지도 키 연결 전' : '[지도] 네이버 지도 키 연결 전'}</span>
+      <span className="absolute bottom-3 right-3 text-[11px] text-sub">{note ?? (center ? '위치는 결제 데이터 좌표 기준 · 네이버 지도 키 연결 전' : '[지도] 네이버 지도 키 연결 전')}</span>
     </div>
   );
 }
 
 export default function MapView({ top3, center, className = '' }: { top3: StoreView[]; center?: LatLng; className?: string }) {
-  return KEY_ID ? <NaverMap center={center ?? DEFAULT_CENTER} top3={top3} className={className} /> : <PlaceholderMap top3={top3} center={center} className={className} />;
+  const [authFailed, setAuthFailed] = useState(false);
+  const onAuthFail = useCallback(() => setAuthFailed(true), []);
+  return KEY_ID && !authFailed ? (
+    <NaverMap center={center ?? DEFAULT_CENTER} top3={top3} className={className} onAuthFail={onAuthFail} />
+  ) : (
+    <PlaceholderMap top3={top3} center={center} className={className} note={authFailed ? '네이버 지도 인증 실패 · 콘솔 Web 서비스 URL 확인' : undefined} />
+  );
 }

@@ -12,7 +12,7 @@ const NOT_MEAL = /카페|커피|디저트|베이커리|제과|빵|아이스크�
 export const CANT_RULES: Record<string, RegExp> = {
   '매운 거': /마라|떡볶이|낙지|쭈꾸미|주꾸미|짬뽕|닭발|불닭|매운|훠궈|찜닭|김치찜|아구찜|아귀찜/,
   해산물: /횟집|생선회|^회$|스시|초밥|해산물|해물|조개|생선|수산|대게|킹크랩|굴|낙지|오징어|아구|아귀|복어|장어|참치|쭈꾸미|주꾸미|새우|게장|매운탕|물회/,
-  '술 못 마심': /주점|호프|이자카야|포차|술집|와인|맥주|막걸리|칵테일|^바$|펍|요리주점/,
+  '술 못 마심': /주점|주류|호프|이자카야|포차|술집|와인|맥주|막걸리|칵테일|^바$|^바\(bar\)$|펍|요리주점/,
 };
 
 export type PickOptions = {
@@ -112,7 +112,9 @@ export function rankForMode(items: EatplItem[], mode: Mode, o: { at?: number; da
     const boost = (it: EatplItem) =>
       (mode === 'party' && it.empyVsitYn ? -1 : 0) +
       ((mode === 'travel' || mode === 'meal') && it.loclPrsnPpltYn ? -1 : 0) +
-      (mode === 'event' && (isAllDay(it.srtTime, it.endTime) || (toMinutes(it.endTime) ?? 0) <= (toMinutes(it.srtTime) ?? 0)) ? -1 : 0);
+      (mode === 'event' && (isAllDay(it.srtTime, it.endTime) || (toMinutes(it.endTime) ?? 0) <= (toMinutes(it.srtTime) ?? 0)) ? -1 : 0) +
+      // 오늘 밥 한 끼 · 여행은 술집·주류판매점을 뒤로 (식사 목록이라서)
+      ((mode === 'meal' || mode === 'travel') && CANT_RULES['술 못 마심'].test(it.merTpbuzNm ?? '') ? 2 : 0);
     return boost(a) - boost(b); // 같은 그룹 안에서는 원래 매출 순서 유지 (stable sort)
   });
   return sorted.slice(0, o.limit ?? 10).map((it) => ({ ...it, _tags: buildTags(it, { mode, at: o.at, day: o.day, now: o.now, peers: items }), _reason: ruleReason(it, { mode, at: o.at, day: o.day }), _reasonBy: 'rule' as const }));
