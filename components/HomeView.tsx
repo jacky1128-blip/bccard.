@@ -61,11 +61,21 @@ export default function HomeView({
       queueMicrotask(() => setGeoFail(true));
       return;
     }
+    // 위치 응답이 늦게 와도, 그사이 사용자가 다른 화면으로 갔거나 장소를 골랐으면 첫 화면으로 끌고 오지 않음
+    // (두 화면 이동이 겹쳐 React 'conditional use()' 오류가 나던 원인)
+    let alive = true;
     navigator.geolocation.getCurrentPosition(
-      (pos) => router.replace(`/?mode=${initialMode}&place=${pos.coords.latitude.toFixed(4)},${pos.coords.longitude.toFixed(4)}`),
-      () => setGeoFail(true),
+      (pos) => {
+        if (!alive || window.location.pathname !== '/' || new URLSearchParams(window.location.search).has('place')) return;
+        const mode = new URLSearchParams(window.location.search).get('mode') ?? initialMode;
+        router.replace(`/?mode=${mode}&place=${pos.coords.latitude.toFixed(4)},${pos.coords.longitude.toFixed(4)}`);
+      },
+      () => alive && setGeoFail(true),
       { enableHighAccuracy: false, timeout: 8000, maximumAge: 5 * 60_000 },
     );
+    return () => {
+      alive = false;
+    };
   }, [defaultPlace, initialMode, router]);
 
   return (

@@ -166,7 +166,8 @@ export default function MapView({ top3, center, className = '' }: { top3: StoreV
   return (
     // isolate: 덮는 지도의 z-index 가 이 상자 안에서만 작동 (위의 검색창·상황 칩을 가리지 않게)
     <div className={`relative isolate ${className}`}>
-      <NaverMap center={center ?? DEFAULT_CENTER} top3={top3} className="absolute inset-0" onAuthFail={onAuthFail} />
+      {/* 네이버 지도가 이 요소에 position:relative 를 강제로 넣어서 absolute 로는 높이가 0이 됨 → h-full w-full */}
+      <NaverMap center={center ?? DEFAULT_CENTER} top3={top3} className="h-full w-full" onAuthFail={onAuthFail} />
       {authFailed && (
         <PlaceholderMap top3={top3} center={center} className="absolute inset-0 z-[1]" note="네이버 지도 인증 실패 · 콘솔 Web 서비스 URL에 이 주소 등록 필요" />
       )}
