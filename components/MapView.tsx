@@ -51,7 +51,14 @@ function NaverMap({ center, top3, className, onAuthFail }: { center: LatLng; top
   useEffect(() => {
     const maps = window.naver?.maps;
     if (!ready || !maps || !el.current) return;
-    const map = new maps.Map(el.current, { center: new maps.LatLng(center.lat, center.lng), zoom: 16, scaleControl: false, mapDataControl: false });
+    // 인증 실패 등으로 SDK 가 망가져 있어도 화면 전체가 죽지 않게
+    let map: InstanceType<NaverMaps['Map']>;
+    try {
+      map = new maps.Map(el.current, { center: new maps.LatLng(center.lat, center.lng), zoom: 16, scaleControl: false, mapDataControl: false });
+    } catch (e) {
+      console.error('[naver map] 지도 생성 실패', e);
+      return;
+    }
     const markers = [
       new maps.Marker({
         position: new maps.LatLng(center.lat, center.lng),
@@ -73,8 +80,12 @@ function NaverMap({ center, top3, className, onAuthFail }: { center: LatLng; top
       );
     }
     return () => {
-      markers.forEach((m) => m.setMap(null));
-      map.destroy?.();
+      try {
+        markers.forEach((m) => m.setMap(null));
+        map.destroy?.();
+      } catch {
+        /* SDK 오류는 무시 */
+      }
     };
   }, [ready, center.lat, center.lng, top3]);
 
@@ -122,7 +133,7 @@ function pinPositions(top3: StoreView[], center?: LatLng) {
 function PlaceholderMap({ top3, center, className, note }: { top3: StoreView[]; center?: LatLng; className: string; note?: string }) {
   const pins = pinPositions(top3, center);
   return (
-    <div className={`relative overflow-hidden bg-map ${className}`} role="img" aria-label="결제 순위 1·2·3위 위치 지도">
+    <div className={`overflow-hidden bg-map ${className.includes("absolute") ? "" : "relative"} ${className}`} role="img" aria-label="결제 순위 1·2·3위 위치 지도">
       <div className="absolute inset-x-0 top-[37.5%] h-3.5 bg-white" />
       <div className="absolute inset-y-0 left-[38%] w-3 bg-white" />
       <div className="absolute inset-x-0 top-[71%] h-2 bg-[#F7F8FA]" />
@@ -149,9 +160,16 @@ function PlaceholderMap({ top3, center, className, note }: { top3: StoreView[]; 
 export default function MapView({ top3, center, className = '' }: { top3: StoreView[]; center?: LatLng; className?: string }) {
   const [authFailed, setAuthFailed] = useState(false);
   const onAuthFail = useCallback(() => setAuthFailed(true), []);
-  return KEY_ID && !authFailed ? (
-    <NaverMap center={center ?? DEFAULT_CENTER} top3={top3} className={className} onAuthFail={onAuthFail} />
-  ) : (
-    <PlaceholderMap top3={top3} center={center} className={className} note={authFailed ? '네이버 지도 인증 실패 · 콘솔 Web 서비스 URL 확인' : undefined} />
+  if (!KEY_ID) return <PlaceholderMap top3={top3} center={center} className={className} />;
+  // 인증 실패해도 네이버 지도 영역은 그대로 두고(SDK 가 그 요소를 계속 참조함) 위에 자리표시 지도를 덮음.
+  // 먼저 없애 버리면 SDK 내부 오류로 페이지 전체가 죽음 (2026-11-10 확인: 등록 안 된 주소 → 401 → 'capitalize' of null)
+  return (
+    // isolate: 덮는 지도의 z-index 가 이 상자 안에서만 작동 (위의 검색창·상황 칩을 가리지 않게)
+    <div className={`relative isolate ${className}`}>
+      <NaverMap center={center ?? DEFAULT_CENTER} top3={top3} className="absolute inset-0" onAuthFail={onAuthFail} />
+      {authFailed && (
+        <PlaceholderMap top3={top3} center={center} className="absolute inset-0 z-[1]" note="네이버 지도 인증 실패 · 콘솔 Web 서비스 URL에 이 주소 등록 필요" />
+      )}
+    </div>
   );
 }
