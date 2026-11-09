@@ -73,7 +73,7 @@ export default function RankingView({
 
   return (
     <>
-      <BrandHeader back={`/?mode=${mode}`} />
+      <BrandHeader back={`/?mode=${mode}${fixedPlace ? `&place=${encodeURIComponent(fixedPlace)}` : ''}`} />
       <PageTitle
         kicker={m.label}
         title={

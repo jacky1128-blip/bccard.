@@ -1,5 +1,5 @@
 // 와이어프레임 공통 조각: 글자 스타일, 버튼 스타일, 브랜드, 뒤로 가기, 페이지 틀
-import Link from 'next/link';
+import BackLink from './BackLink';
 
 export const SERVICE_NAME = '밥콕';
 export const SERVICE_TAGLINE = '결제로 고른 한 끼';
@@ -85,13 +85,8 @@ export function Brand() {
   );
 }
 
-export function BackLink({ href }: { href: string }) {
-  return (
-    <Link href={href} aria-label="뒤로" className="flex size-11 items-center justify-center text-ink">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
-    </Link>
-  );
-}
+// 뒤로 가기 버튼은 components/BackLink.tsx (앱 안 이동이면 진짜 이전 화면으로)
+export { default as BackLink } from './BackLink';
 
 // 뒤로 + 브랜드 (순위·추천·결과 화면 머리)
 export function BrandHeader({ back }: { back: string }) {

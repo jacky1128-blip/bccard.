@@ -14,7 +14,7 @@ import ShareButtons, { useCopy } from './ShareButtons';
 import StoreCard from './StoreCard';
 import { PreviewRow } from './StoreRow';
 import SourceNote from './SourceNote';
-import { Brand, Page, SectionTitle, btn, t } from './ui';
+import { BrandHeader, Page, SectionTitle, btn, t } from './ui';
 
 const CANT = ['매운 거', '해산물', '술 못 마심'];
 const FRIENDS = ['민', '서', '지', '하', '도', '윤', '준', '아', '현', '수'];
@@ -144,7 +144,7 @@ export default function GroupRoom({ initial, live }: { initial: GroupState; live
   if (!ready) {
     return (
       <Page>
-        <Brand />
+        <BrandHeader back="/" />
         <p role="status" className={`rounded-2xl bg-fill py-10 text-center ${t.desc}`}>모임을 불러오는 중…</p>
       </Page>
     );
@@ -154,7 +154,7 @@ export default function GroupRoom({ initial, live }: { initial: GroupState; live
   if (step === 'join') {
     return (
       <Page>
-        <Brand />
+        <BrandHeader back={`/?mode=${g.mode}`} />
         <div className="flex flex-col gap-1.5">
           <span className={t.desc}>방장님이 초대했어요. 가입 없어도 참여할 수 있어요.</span>
           <h1 className={t.pageTitle}>
@@ -215,6 +215,7 @@ export default function GroupRoom({ initial, live }: { initial: GroupState; live
     const best = meeting.best;
     return (
       <Page>
+        <BrandHeader back={`/?mode=${g.mode}`} />
         <div className="flex flex-col gap-1">
           <h1 className={t.pageTitle}>{g.title}</h1>
           <span className={`${t.desc} ${t.num}`}>{g.when} · {g.place} 근처</span>
@@ -281,6 +282,7 @@ export default function GroupRoom({ initial, live }: { initial: GroupState; live
   if (step === 'vote') {
     return (
       <Page>
+        <BrandHeader back={`/?mode=${g.mode}`} />
         <div className="flex flex-col gap-1.5">
           <span className={`${t.kicker} ${t.num}`}>투표 시작 · 지금까지 {total}명 투표</span>
           <h1 className={t.pageTitle}>{g.title}</h1>
@@ -339,6 +341,7 @@ export default function GroupRoom({ initial, live }: { initial: GroupState; live
   const notice = winner ? `${g.when} ${g.title}\n${winner.name} · ${g.place} 근처${winner.address ? ` (${winner.address})` : ''}\n메뉴·투표 결과: ${shareUrl()}` : '';
   return (
     <Page>
+      <BrandHeader back={`/?mode=${g.mode}`} />
       <div className="flex flex-col gap-1.5">
         <span className={t.kicker}>투표 마감 · 확정</span>
         <h1 className={t.pageTitle}>

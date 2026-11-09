@@ -10,7 +10,7 @@ export const metadata = { title: '같이 정하기' };
 async function Content({ searchParams }: { searchParams: Promise<SP> }) {
   const sp = await searchParams;
   const mode = toMode(q(sp, 'mode'), 'party');
-  return <CreateForm initialMode={mode} initialPlace={q(sp, 'place')} back={q(sp, 'from') ?? `/ranking?mode=${mode}`} live={dbConfigured()} />;
+  return <CreateForm initialMode={mode} initialPlace={q(sp, 'place')} back={q(sp, 'from') ?? `/?mode=${mode}${q(sp, 'place') ? `&place=${encodeURIComponent(q(sp, 'place')!)}` : ''}`} live={dbConfigured()} />;
 }
 
 export default function Page({ searchParams }: PageProps<'/group/new'>) {

@@ -1,10 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { Jua } from "next/font/google";
 import Script from "next/script";
+import { Suspense } from "react";
 // Pretendard: 필요한 글자만 내려받는 dynamic subset
 import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 import "./globals.css";
 import { SERVICE_NAME, SERVICE_TAGLINE } from "@/components/ui";
+import { NavTracker } from "@/components/BackLink";
 
 // 배민 주아체. globals.css 의 --font-display 가 이 변수를 씀
 const jua = Jua({ weight: "400", subsets: ["latin"], display: "swap", preload: false, variable: "--font-jua" });
@@ -24,6 +26,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="ko" className={jua.variable}>
       <body className="min-h-dvh font-sans">
         <div className="relative mx-auto flex min-h-dvh w-full max-w-[430px] flex-col bg-white shadow-[0_0_0_1px_var(--line)]">
+          <Suspense fallback={null}>
+            <NavTracker />
+          </Suspense>
           {children}
         </div>
         {GA_ID && (
