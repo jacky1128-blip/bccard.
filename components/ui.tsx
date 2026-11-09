@@ -1,7 +1,9 @@
 // 와이어프레임 공통 조각: 글자 스타일, 버튼 스타일, 브랜드, 뒤로 가기, 페이지 틀
 import Link from 'next/link';
 
-export const SERVICE_NAME = '[서비스명]'; // 서비스명 확정되면 여기만 바꾸기
+export const SERVICE_NAME = '밥콕';
+export const SERVICE_TAGLINE = '결제로 고른 한 끼';
+export const LOGO_BLUE = '#2E5E9F'; // 로고 마크 전용 색 (버튼 등 화면 파랑은 --primary)
 
 /* ---------- 글자 스타일 (모바일 390px 기준) ----------
  * 주아체(font-display)는 굵기가 400 하나뿐 → font-bold 금지, 크기로 위계
@@ -58,12 +60,27 @@ export const btn = {
   field: 'h-12 w-full rounded-xl border border-line bg-white px-3.5 text-[15px] text-ink outline-none focus:border-primary',
 };
 
+// 밥콕 로고 마크: 파란 둥근 사각형 + 흰 선 위치 핀 + 밥그릇 (app/icon.svg 와 같은 그림)
+export function LogoMark({ size = 24, className = '' }: { size?: number; className?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 64 64" className={`shrink-0 ${className}`} role="img" aria-label={`${SERVICE_NAME} 로고`}>
+      <rect width="64" height="64" rx="15" fill={LOGO_BLUE} />
+      <g fill="none" stroke="#fff" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M32 36C26.5 30 21.5 26 21.5 19a10.5 10.5 0 0 1 21 0C42.5 26 37.5 30 32 36Z" />
+        <circle cx="32" cy="19" r="4" />
+        <path d="M17.5 43C20 38.5 25.5 36 32 36s12 2.5 14.5 7" />
+        <path d="M10.5 43h43C52 52.5 43.5 56.5 32 56.5S12 52.5 10.5 43Z" />
+      </g>
+    </svg>
+  );
+}
+
 export function Brand() {
   return (
     <div className="flex items-center gap-1.5">
-      <span className="flex size-[22px] items-center justify-center rounded-md bg-primary font-display text-[13px] text-white">밥</span>
+      <LogoMark size={24} />
       <span className={t.logo}>{SERVICE_NAME}</span>
-      <span className="text-[11px] text-sub">eat.pl 결제 데이터 활용</span>
+      <span className="text-[11px] text-sub">{SERVICE_TAGLINE}</span>
     </div>
   );
 }

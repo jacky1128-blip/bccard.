@@ -46,7 +46,7 @@
 
 ### 1-3. 정해야 하는 것
 
-- [ ] **서비스 이름**: 지금 `[서비스명]`. 정하면 `components/ui.tsx`의 `SERVICE_NAME` 한 곳만 바꾸면 됨
+- [x] **서비스 이름**: **밥콕** · 결제로 고른 한 끼 (2026-11-10). 이름·한 줄 소개·로고 색은 `components/ui.tsx`의 `SERVICE_NAME`·`SERVICE_TAGLINE`·`LOGO_BLUE`, 로고 그림은 `LogoMark` + `app/icon.svg`(브라우저 탭), 받은 원본 이미지는 `public/brand/babkok-logo-original.png`
 - [ ] **열차 시간표 소스**: 여행 화면 "예매한 열차로 채우기"는 아직 데모 시간. 확인한 후보:
   - k-skill `railway-timetable`: 코레일 공개 통합 시간표(XLSX). **KTX만, SRT 없음**, 엑셀 파싱 필요
   - 공공데이터포털 열차 운행 정보: 서비스 키 발급 필요
