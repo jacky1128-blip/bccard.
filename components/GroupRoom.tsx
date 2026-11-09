@@ -170,7 +170,7 @@ export default function GroupRoom({ initial, live }: { initial: GroupState; live
             <span className="size-3.5 rounded-full border-2 border-dashed border-primary" />
           </div>
           <div className="flex flex-col gap-0.5">
-            <span className={`text-sm font-bold text-primary-ink ${t.num}`}>{g.status === 'voting' ? '투표가 열렸어요' : g.mid ? '출발역을 넣고 기다려 주세요' : left > 0 ? `투표까지 ${left}자리 남았어요` : '투표가 열렸어요'}</span>
+            <span className={`text-sm font-bold text-primary-ink ${t.num}`}>{g.status === 'voting' ? '투표가 열렸어요' : g.mid ? '출발역을 넣고 기다려 주세요' : left > 0 ? `${joined.length} / ${g.headcount}명 들어왔어요 · ${left}명 더 오면 투표 시작` : '투표가 열렸어요'}</span>
             <span className={t.desc}>{createRule(g.headcount, g.mid)}</span>
           </div>
         </div>

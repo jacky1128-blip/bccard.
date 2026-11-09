@@ -25,8 +25,9 @@ export default function SeatTable({ headcount, joined, mid }: { headcount: numbe
     <div className="flex flex-col items-center gap-2.5">
       <div className="flex justify-center gap-6">{rows[0].map(([n, i]) => <Seat key={i} name={n} idx={i} />)}</div>
       <div className="flex h-[88px] w-[210px] flex-col items-center justify-center gap-0.5 rounded-full border-[1.5px] border-[#D5D8DC] bg-white">
-        <span className="text-[26px] font-black tabular-nums text-primary">{Math.min(joined.length, need)} / {need}</span>
-        <span className="font-display text-[15px]">{mid ? '방장이 장소 정하는 중' : left > 0 ? `투표까지 ${left}자리` : '투표가 열렸어요'}</span>
+        {/* 들어온 사람 / 전체 자리. 투표 열림 기준(절반)은 아래 줄에 따로 */}
+        <span className="text-[26px] font-black tabular-nums text-primary">{Math.min(joined.length, headcount)} / {headcount}</span>
+        <span className="font-display text-[15px]">{mid ? '방장이 장소 정하는 중' : left > 0 ? `${left}명 더 오면 투표 시작` : '투표가 열렸어요'}</span>
       </div>
       <div className="flex justify-center gap-6">{rows[1].map(([n, i]) => <Seat key={i} name={n} idx={i} />)}</div>
     </div>
