@@ -141,6 +141,16 @@ export default function RankingView({
         <ModeChips variant="tabs" value={mode} onChange={changeMode} />
         <Filters value={f} onChange={setF} cats={cats} />
       </div>
+      {/* 같이 정하기 안내: 태블릿·PC 는 목록 위 가로 배너 (모바일은 화면 아래 고정 버튼) */}
+      <div className="hidden items-center justify-between gap-4 rounded-2xl bg-primary-soft px-5 py-4 md:flex">
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <h2 className={t.sheetTitle}>{m.boxTitle}</h2>
+          <span className={`${t.body} text-sub`}>{m.boxSub}</span>
+        </div>
+        <div className="w-52 shrink-0">
+          <Link href={`${m.boxHref}${m.boxHref.includes('?') ? `&place=${encodeURIComponent(place)}` : ''}`} className={btn.primary}>{m.boxBtn}</Link>
+        </div>
+      </div>
       <span className={`-mt-2 ${t.desc}`}>최근 결제 금액 순으로 최대 10곳이에요.</span>
 
       <div className="flex flex-col gap-2.5 md:grid md:grid-cols-2 md:gap-3 lg:flex">
@@ -171,11 +181,6 @@ export default function RankingView({
         )}
       </div>
 
-      <div className="flex flex-col gap-2.5 rounded-2xl bg-primary-soft p-[18px]">
-        <h2 className={t.sheetTitle}>{m.boxTitle}</h2>
-        <span className={`${t.body} text-sub`}>{m.boxSub}</span>
-        <Link href={m.boxHref} className={btn.primary}>{m.boxBtn}</Link>
-      </div>
 
       {nearby.length > 0 && (
         <div className="flex flex-wrap gap-2">
@@ -187,6 +192,11 @@ export default function RankingView({
           ))}
         </div>
       )}
+      {/* 모바일: 같이 정하기 버튼을 화면 아래에 고정 (목록을 끝까지 안 내려도 보이게) */}
+      <div className="sticky bottom-0 z-20 -mx-5 mt-auto bg-gradient-to-t from-white from-70% to-transparent px-5 pt-5 pb-[max(1rem,env(safe-area-inset-bottom))] md:hidden">
+        <span className={`mb-1.5 block text-center ${t.desc}`}>{m.boxTitle}</span>
+        <Link href={`${m.boxHref}${m.boxHref.includes('?') ? `&place=${encodeURIComponent(place)}` : ''}`} className={btn.primary}>{m.boxBtn}</Link>
+      </div>
      </div>
 
       {/* PC: 오른쪽 지도 (보이는 목록 순서 = 핀 번호) */}
