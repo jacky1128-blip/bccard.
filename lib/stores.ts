@@ -86,6 +86,15 @@ export async function getCandidates(q: CandidateQuery): Promise<StoresResult> {
   }
 }
 
+// AI 추천 이유는 나중에: 화면은 규칙 이유로 바로 보여 주고(getCandidates ai:false), 이 함수가 끝나면 AI 이유로 바꿔 끼움
+// (AI 문장 만드는 데 몇 초 걸려서, 그동안 빈 화면 대신 가게 목록을 먼저 보여 주려고)
+export async function withAiReasons(r: StoresResult, q: Pick<CandidateQuery, 'mode' | 'when' | 'cantEat' | 'headcount'>): Promise<StoreView[]> {
+  if (!r.live || !r.items?.length) return r.stores;
+  const ai = await writeReasons(r.items, { mode: q.mode, place: r.label, when: q.when, cantEat: q.cantEat, headcount: q.headcount });
+  if (!ai) return r.stores;
+  return r.stores.map((s, i) => (ai[i] ? { ...s, reason: ai[i], reasonBy: 'ai' as const } : s));
+}
+
 export type ByModeResult = Omit<StoresResult, 'stores'> & { storesByMode: Record<Mode, StoreView[]> };
 
 // 첫 화면·순위 화면: 잇플 한 번 호출로 상황 4개 목록 (각 최대 10곳)

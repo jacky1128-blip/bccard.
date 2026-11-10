@@ -95,6 +95,8 @@ async function generate(items: EatplItem[], ctx: ReasonContext): Promise<string[
     max_tokens: 16000,
     // Haiku 는 서버 대체 모델(fallbacks)을 지원하지 않음 → 거절·실패하면 규칙 문장으로
     system: SYSTEM,
+    // Haiku 는 생각 단계를 끌 수 있음(effort high 이하) → 짧은 문장이라 끄면 몇 초 빨라짐. 다른 모델은 켠 채로
+    ...(MODEL.startsWith('claude-haiku') ? { thinking: { type: 'disabled' as const } } : {}),
     output_config: { effort: 'low', format: jsonSchemaOutputFormat(schema) },
     messages: [{ role: 'user', content: `아래 후보마다 추천 이유를 써 줘.
 ${JSON.stringify(input)}` }],

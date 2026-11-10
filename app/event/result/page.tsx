@@ -1,6 +1,7 @@
 // C2 끝나고 문 연 곳 (경기·공연장 근처 · 끝나는 시간 이후 1시간 이상 영업 · 도보 15분 안)
 import { Suspense } from 'react';
 import ResultView from '@/components/ResultView';
+import WithAiReasons from '@/components/WithAiReasons';
 import { MODES } from '@/lib/modes';
 import { getCandidates } from '@/lib/stores';
 import { dayOfDate, toMinutes } from '@/lib/time';
@@ -17,12 +18,12 @@ async function Content({ searchParams }: { searchParams: Promise<SP> }) {
   const hour = time.slice(0, 2).replace(/^0/, '');
   const at = toMinutes(time)!;
 
-  const r = await getCandidates({
-    place, mode: 'event', at, day: dayOfDate(date), after, maxWalk: 15, widenWalk: 25, limit: 3, now: false,
-    when: `${date ?? ''} ${after ? '끝나는 시간' : '시작 시간'} ${time}`.trim(),
-  });
+  const when = `${date ?? ''} ${after ? '끝나는 시간' : '시작 시간'} ${time}`.trim();
+  // 가게는 바로, AI 추천 이유는 준비되면 바꿔 끼움 (components/WithAiReasons)
+  const r = await getCandidates({ place, mode: 'event', at, day: dayOfDate(date), after, maxWalk: 15, widenWalk: 25, limit: 3, now: false, when, ai: false });
 
   return (
+    <WithAiReasons r={r} q={{ mode: 'event', when }} render={(stores) => (
     <ResultView
       back="/event"
       kicker={`${r.label} · ${after ? `${hour}시 이후에도 문 연 곳` : `${hour}시 전에 들를 곳`}`}
@@ -35,7 +36,7 @@ async function Content({ searchParams }: { searchParams: Promise<SP> }) {
             ? `끝난 직후 ${hour}시에는 주변이 붐빌 수 있어요 · 혼잡 낮은 순으로 보여드려요`
             : undefined
       }
-      stores={r.stores}
+      stores={stores}
       demo={!r.live}
       notFound={r.notFound}
       place={r.label}
@@ -43,6 +44,7 @@ async function Content({ searchParams }: { searchParams: Promise<SP> }) {
       altTime={(s) => s.until}
       groupHref={`/group/new?mode=event&from=/event&place=${encodeURIComponent(r.label)}`}
     />
+    )} />
   );
 }
 
