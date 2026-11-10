@@ -30,14 +30,8 @@ async function Content({ searchParams }: { searchParams: Promise<SP> }) {
     <>
       <BrandHeader back={`/?mode=${mode}${placeQs}`} />
       <PageTitle
-        kicker={`${m.label} · 지금 ${now} 기준`}
-        title={
-          <>
-            {r.label} 근처
-            <br />
-            지금 갈 만한 곳
-          </>
-        }
+        kicker={`${r.label} 근처 · 지금 ${now} 기준 AI 추천`}
+        title={m.homeTitle}
         desc="결제 순위에 영업시간·거리·예상 혼잡을 반영했어요"
       />
       {!r.live && <DemoNote notFound={r.notFound} place={r.label} />}

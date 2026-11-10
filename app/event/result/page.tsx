@@ -25,14 +25,8 @@ async function Content({ searchParams }: { searchParams: Promise<SP> }) {
   return (
     <ResultView
       back="/event"
-      kicker={`경기·공연 전후 · ${after ? '끝나고' : '시작 전'}`}
-      title={
-        <>
-          {r.label}
-          <br />
-          {after ? `${hour}시 이후에도 문 연 곳` : `${hour}시 전에 들를 곳`}
-        </>
-      }
+      kicker={`${r.label} · ${after ? `${hour}시 이후에도 문 연 곳` : `${hour}시 전에 들를 곳`}`}
+      title={after ? MODES.event.homeTitle : '경기·공연 시작 전에 갈 곳'}
       stats={[[after ? '종료 예상' : '시작', time], ['거리', r.widened ? '도보 25분 안' : '도보 15분 안'], ['정렬', '매출 높은 순']]}
       notice={
         r.widened

@@ -25,14 +25,8 @@ async function Content({ searchParams }: { searchParams: Promise<SP> }) {
   return (
     <ResultView
       back="/travel"
-      kicker={`여행 · 도착 ${time}`}
-      title={
-        <>
-          {r.label} 도착하면
-          <br />
-          {local ? '갈 만한 현지인 맛집' : '갈 만한 곳'}
-        </>
-      }
+      kicker={`${r.label} · ${time} 도착`}
+      title={local ? MODES.travel.homeTitle : '도착해서 갈 만한 곳'}
       stats={[['도착', time], ['기준', local ? '동네맛집만' : '결제 순위'], ['거리', near ? '도보 10분 안' : '역 근처']]}
       stores={r.stores}
       demo={!r.live}

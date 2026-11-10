@@ -111,15 +111,10 @@ export default function RankingView({
     <div className="flex flex-col gap-5 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start lg:gap-8">
      <div className="flex min-w-0 flex-col gap-5">
       <BrandHeader back={`/?mode=${mode}${fixedPlace ? `&place=${encodeURIComponent(fixedPlace)}` : ''}`} />
+      {/* 첫 화면과 같은 규칙: 큰 제목 = 상황(탭마다 바뀜), 위 파란 글씨 = 장소 */}
       <PageTitle
-        kicker={m.label}
-        title={
-          <>
-            {place} 근처
-            <br />
-            결제 많은 가게
-          </>
-        }
+        kicker={`${place} 근처 결제 많은 가게`}
+        title={m.homeTitle}
         desc={
           <>
             {fixedPlace ? `고른 ${place} 기준이에요` : `현재 내 위치에서 가까운 ${place} 기준이에요`}
