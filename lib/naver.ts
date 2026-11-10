@@ -11,6 +11,7 @@
 //    2·3 헤더 x-ncp-apigw-api-key-id / x-ncp-apigw-api-key   (NAVER_MAP_KEY_ID / NAVER_MAP_KEY)
 //    콘솔 Application 에서 Geocoding · Reverse Geocoding 을 선택해야 함 (안 하면 403)
 import 'server-only';
+import { pickPlace } from './placePick';
 
 export type ResolvedPlace = {
   name: string;
@@ -32,7 +33,7 @@ function fromSearchCoord(mapx: string, mapy: string) {
   return { lng: x / 1e7, lat: y / 1e7 };
 }
 
-async function searchLocal(query: string): Promise<ResolvedPlace | null> {
+async function searchLocal(query: string, stationOnly = false): Promise<ResolvedPlace | null> {
   const id = process.env.NAVER_SEARCH_CLIENT_ID;
   const secret = process.env.NAVER_SEARCH_CLIENT_SECRET;
   if (!id || !secret) return null;
@@ -46,11 +47,12 @@ async function searchLocal(query: string): Promise<ResolvedPlace | null> {
   const items = data.items ?? [];
   // 이름이 정확히 같은 곳 먼저 ("잠실종합운동장" → '…잠실종합운동장점' 카페 말고 운동장) /
   // "○○역" → 지하철역 결과 먼저 / "○○동" → 주소에 그 동이 들어 있는 결과 먼저 (이름만 비슷한 다른 동네 가게 제외)
-  const it =
-    items.find((x) => strip(x.title).replace(/\s/g, '') === query.replace(/\s/g, '')) ||
-    (/역$/.test(query) && items.find((x) => x.category?.includes('지하철'))) ||
-    (/(동|읍|면|가|리)$/.test(query) && items.find((x) => x.address.split(/\s+/).some((w) => w === query || w.replace(/\d+(동|가)$/, '$1') === query))) ||
-    items[0];
+  const cands = items.map((x) => ({ ...x, title: strip(x.title) }));
+  // stationOnly: 이름이 검색어로 시작하는 역만 ("고양역" 검색에 나온 지축역, "코엑스역"에 나온 삼성역 제외)
+  const stem = query.replace(/역$/, '');
+  const it = stationOnly
+    ? cands.find((x) => /지하철|전철|기차|철도/.test(x.category ?? '') && x.title.replace(/\s/g, '').startsWith(stem))
+    : pickPlace(query, cands);
   if (!it) return null;
   const c = fromSearchCoord(it.mapx, it.mapy);
   if (!c) return null;
@@ -97,6 +99,11 @@ export async function reverseGeocode(lat: number, lng: number): Promise<Resolved
 export async function resolveNaver(query: string): Promise<ResolvedPlace | null> {
   const q = query.trim().replace(/^\[|\]$/g, '');
   if (!q) return null;
+  // "강남", "성수", "판교"처럼 짧은 지역 이름 → 같은 이름의 역이 있으면 그 역 (사람들이 보통 역 근처를 뜻함)
+  if (/^[가-힣]{1,5}$/.test(q) && !/(역|동|읍|면|가|리|구|시|군)$/.test(q)) {
+    const st = await searchLocal(`${q}역`, true);
+    if (st) return st;
+  }
   return (await searchLocal(q)) ?? (await geocode(q));
 }
 

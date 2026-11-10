@@ -3,6 +3,7 @@
 // 2순위: k-skill 프록시의 카카오 (키 없이 동작) — 네이버 실패·키 없음일 때만
 import 'server-only';
 import { cacheLife } from 'next/cache';
+import { pickPlace } from './placePick';
 import { naverConfigured, naverMapsConfigured, resolveNaver, reverseGeocode, type ResolvedPlace } from './naver';
 
 const BASE = (process.env.KSKILL_PROXY_BASE_URL || 'https://k-skill-proxy.nomadamas.org').replace(/\/+$/, '');
@@ -36,15 +37,16 @@ export function regionOf(addr?: string) {
 }
 
 async function kakaoKeyword(query: string): Promise<ResolvedPlace | null> {
-  const res = await fetch(`${BASE}/v1/kakao-map/search/keyword?${new URLSearchParams({ q: query, size: '1' })}`, {
+  const res = await fetch(`${BASE}/v1/kakao-map/search/keyword?${new URLSearchParams({ q: query, size: '15' })}`, {
     headers: { accept: 'application/json' },
     signal: AbortSignal.timeout(15_000),
   });
   if (!res.ok) throw new Error(`kakao keyword ${res.status}`);
   const data = (await res.json()) as {
-    documents?: { place_name: string; address_name: string; road_address_name: string; x: string; y: string }[];
+    documents?: { place_name: string; category_name?: string; address_name: string; road_address_name: string; x: string; y: string }[];
   };
-  const d = data.documents?.[0];
+  // 아무 가게 말고 장소(역·경기장·명소 등)나 이름이 똑같은 곳만 (lib/placePick)
+  const d = pickPlace(query, (data.documents ?? []).map((x) => ({ ...x, title: x.place_name, category: x.category_name, address: x.address_name })));
   if (!d) return null;
   return {
     name: d.place_name,
