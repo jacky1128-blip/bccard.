@@ -28,6 +28,9 @@ export function regionOf(addr?: string) {
   if (!addr) return '';
   const words = addr.trim().split(/\s+/);
   if (SIDO[words[0]]) words[0] = SIDO[words[0]];
+  // 행정통합으로 생긴 새 이름은 잇플이 아직 모름 → 옛 이름으로 ("전남광주통합특별시 광산구" → "광주 광산구", "… 목포시" → "전남 목포시")
+  // 광주는 구(동구·서구·남구·북구·광산구)만 있고 전남에는 구가 없음
+  else if (/^전남광주/.test(words[0])) words[0] = /구$/.test(words[1] ?? '') ? '광주' : '전남';
   const end = words.findIndex((w, i) => i >= 1 && /(동|읍|면|가|리)$/.test(w) && !/\d/.test(w));
   return (end >= 0 ? words.slice(0, end + 1) : words.slice(0, 3)).join(' ');
 }
