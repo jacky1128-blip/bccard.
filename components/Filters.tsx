@@ -36,7 +36,7 @@ export default function Filters({ value, onChange, cats }: { value: FilterValue;
           aria-label="업종"
           value={value.cat}
           onChange={(e) => set({ cat: e.target.value })}
-          className="absolute inset-0 cursor-pointer opacity-0"
+          className="absolute inset-0 z-10 cursor-pointer opacity-0" /* 칩의 터치 영역(::after)보다 위에 있어야 눌림 */
         >
           <option value="">업종 전체</option>
           {cats.map((c) => <option key={c} value={c}>{c}</option>)}

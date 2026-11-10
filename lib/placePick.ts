@@ -1,7 +1,7 @@
 // 장소 검색 결과에서 "기준 장소"로 쓸 것 고르기 (네이버·카카오 공통)
 // 검색어가 일반 단어("고양이")거나 가게 이름 일부면 결과 1등이 아무 가게(명동 고양이카페 등)라서,
 // 1) 이름이 정확히 같은 곳 → 2) 역·경기장·명소·학교·공원 같은 '장소' 분류 → 없으면 못 찾음으로 처리
-export type Candidate = { title: string; category?: string; address?: string };
+export type Candidate = { title: string; category?: string; address?: string; roadAddress?: string };
 
 // 기준점으로 쓸 만한 장소 분류 (네이버 "스포츠,오락>프로야구장", 카카오 "스포츠,레저 > 야구 > 야구장" 등)
 const PLACE_CATEGORY =
@@ -9,8 +9,13 @@ const PLACE_CATEGORY =
 
 const norm = (s: string) => s.replace(/<[^>]+>/g, '').replace(/\s/g, '').toLowerCase();
 
-export function pickPlace<T extends Candidate>(query: string, items: T[]): T | undefined {
+export function pickPlace<T extends Candidate>(query: string, all: T[]): T | undefined {
   const q = norm(query);
+  // "대구 동성로"처럼 앞에 지역을 붙였으면 그 지역 주소인 결과만 (부산 동성로 제외)
+  const words = query.trim().split(/\s+/);
+  const area = words.length > 1 ? norm(words[0]) : '';
+  const scoped = area ? all.filter((x) => norm(`${x.address ?? ''} ${x.roadAddress ?? ''}`).includes(area)) : [];
+  const items = scoped.length ? scoped : all;
   const exact = items.find((x) => norm(x.title) === q);
   if (exact) return exact;
   if (/역$/.test(query)) {
@@ -23,5 +28,11 @@ export function pickPlace<T extends Candidate>(query: string, items: T[]): T | u
     const hit = items.find((x) => (x.address ?? '').split(/\s+/).some((w) => w === dong || w.replace(/\d+(동|가)$/, '$1') === dong));
     if (hit) return hit;
   }
-  return items.find((x) => PLACE_CATEGORY.test(x.category ?? ''));
+  const place = items.find((x) => PLACE_CATEGORY.test(x.category ?? ''));
+  if (place) return place;
+  // "대구 동성로", "가로수길"처럼 길·동네 이름 → 주소에 그 이름이 들어 있는 결과 (그 거리의 가게라도 위치는 맞음)
+  // "고양이"·"맛집" 같은 일반 단어는 주소에 안 들어가서 계속 못 찾음
+  const last = norm(query.trim().split(/\s+/).pop() ?? '');
+  if (last.length >= 2) return items.find((x) => norm(`${x.roadAddress ?? ''} ${x.address ?? ''}`).includes(last));
+  return undefined;
 }

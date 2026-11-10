@@ -163,8 +163,10 @@ export default function HomeView({
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B5F66" strokeWidth="2" strokeLinecap="round" aria-hidden="true" className="shrink-0"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
           <span className="truncate text-sm text-sub">동네나 역 이름으로 검색해요</span>
         </Link>
-        <button type="button" aria-label="내 위치로 이동" onClick={locate} disabled={locating} className="flex size-12 shrink-0 items-center justify-center rounded-[14px] bg-white shadow-[0_2px_10px_rgba(0,0,0,0.10)] md:border md:border-line md:shadow-none">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2F54EB" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /></svg>
+        <button type="button" aria-label="내 위치로 이동" onClick={locate} disabled={locating} className="flex h-12 w-14 shrink-0 flex-col items-center justify-center gap-0.5 rounded-[14px] bg-white shadow-[0_2px_10px_rgba(0,0,0,0.10)] md:border md:border-line md:shadow-none">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2F54EB" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /></svg>
+          {/* 아이콘만으로는 뭔지 몰라서 글자도 (사용자 피드백 2026-11-10) */}
+          <span aria-hidden="true" className="text-[10px] font-bold leading-none text-primary-ink">내 위치</span>
         </button>
       </div>
       {/* 칩이 필터가 아니라 "상황 고르기"라는 걸 질문으로 먼저 보여줌 */}
@@ -241,7 +243,7 @@ export default function HomeView({
             {locating || (defaultPlace && !geoFail)
               ? `내 위치 찾는 중… 잠시 ${place} 기준으로 보여드려요 · `
               : defaultPlace
-                ? `내 위치를 가져오지 못해 기본 위치(${place}) 기준이에요 · 오른쪽 위 ⊙ 버튼이나 검색으로 바꿀 수 있어요 · `
+                ? `내 위치를 가져오지 못해 기본 위치(${place}) 기준이에요 · 오른쪽 위 '내 위치' 버튼이나 검색으로 바꿀 수 있어요 · `
                 : ''}
             지도의 번호와 같아요. 최근 1개월 BC카드 결제 정보를 참고했어요.
           </span>

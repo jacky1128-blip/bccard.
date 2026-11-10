@@ -46,7 +46,7 @@ async function kakaoKeyword(query: string): Promise<ResolvedPlace | null> {
     documents?: { place_name: string; category_name?: string; address_name: string; road_address_name: string; x: string; y: string }[];
   };
   // 아무 가게 말고 장소(역·경기장·명소 등)나 이름이 똑같은 곳만 (lib/placePick)
-  const d = pickPlace(query, (data.documents ?? []).map((x) => ({ ...x, title: x.place_name, category: x.category_name, address: x.address_name })));
+  const d = pickPlace(query, (data.documents ?? []).map((x) => ({ ...x, title: x.place_name, category: x.category_name, address: x.address_name, roadAddress: x.road_address_name })));
   if (!d) return null;
   return {
     name: d.place_name,
@@ -77,7 +77,7 @@ async function fromCoord(lat: number, lng: number): Promise<ResolvedPlace | null
 export const isCoord = (s: string) => COORD.test(s.trim());
 
 // 장소 고르는 규칙(lib/placePick)이 바뀌면 PICK_VERSION 을 올려서 예전 캐시 결과를 쓰지 않음
-const PICK_VERSION = 2;
+const PICK_VERSION = 4;
 export function resolvePlace(input: string): Promise<Place | null> {
   return resolvePlaceCached(input, PICK_VERSION);
 }
