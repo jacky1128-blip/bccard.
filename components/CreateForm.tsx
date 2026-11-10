@@ -8,6 +8,7 @@ import { track } from '@/lib/analytics';
 import { getAnonToken } from '@/lib/anon';
 import ModeChips from './ModeChips';
 import PickerInput from './PickerInput';
+import TimeSelect from './TimeSelect';
 import MidpointPicker from './MidpointPicker';
 import { createRule } from './SeatTable';
 import { BottomBar, Page, Section, TitleHeader, btn, t } from './ui';
@@ -135,7 +136,7 @@ export default function CreateForm({
         <Section title="2. 언제 먹을까요?">
           <div className="grid grid-cols-2 gap-2.5">
             <PickerInput type="date" aria-label="날짜" value={date} onChange={(e) => setDate(e.target.value)} required />
-            <PickerInput type="time" aria-label="시간" value={time} onChange={(e) => setTime(e.target.value)} required />
+            <TimeSelect aria-label="시간" value={time} onChange={setTime} required />
           </div>
         </Section>
 

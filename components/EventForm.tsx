@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { MODES } from '@/lib/modes';
 import { addMinutes } from '@/lib/time';
 import PickerInput from './PickerInput';
+import TimeSelect from './TimeSelect';
 import { BottomBar, Page, PinIcon, Section, TitleHeader, btn, t } from './ui';
 
 const VENUES = ['잠실종합운동장', '고척스카이돔', 'KSPO DOME'];
@@ -139,7 +140,7 @@ export default function EventForm() {
               ))}
             </div>
           )}
-          <PickerInput type="time" aria-label={timing === 'after' ? '끝나는 시간' : '시작 시간'} value={time} onChange={(e) => setTime(e.target.value)} required />
+          <TimeSelect aria-label={timing === 'after' ? '끝나는 시간' : '시작 시간'} value={time} onChange={setTime} required />
           <span className={t.desc}>
             {timing === 'after' ? '경기 종료 시간은 예상값이에요. 언제든 수정할 수 있어요.' : '시작 시간은 언제든 수정할 수 있어요.'}
           </span>

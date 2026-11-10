@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { MODES } from '@/lib/modes';
 import PickerInput from './PickerInput';
+import TimeSelect from './TimeSelect';
 import TrainFill from './TrainFill';
 import { BottomBar, Page, PinIcon, Section, TitleHeader, btn, t } from './ui';
 
@@ -49,7 +50,7 @@ export default function TravelForm() {
           </label>
           <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,auto)] gap-2">
             <PickerInput type="date" aria-label="도착 날짜" value={date} onChange={(e) => setDate(e.target.value)} />
-            <PickerInput type="time" aria-label="도착 시간" className="w-28 min-[360px]:w-32" value={time} onChange={(e) => setTime(e.target.value)} required />
+            <TimeSelect aria-label="도착 시간" className="w-32 min-[360px]:w-36" value={time} onChange={setTime} required />
           </div>
           <span className={t.desc}>도착 시간에 영업 중인 곳만 보여드려요</span>
         </Section>
