@@ -38,16 +38,32 @@ export default function TrainFill({ defaultDate, onFill }: { defaultDate: string
     }
   };
 
-  // 불러온 열차 요약 (와이어프레임 카드)
+  // 불러온 열차 요약 + 내릴 역 고르기 (열차는 여러 역에 서니까 기본은 종착역)
   if (train && !open) {
+    const getOff = (name: string) => {
+      const s = train.stops.find((x) => x.name === name);
+      if (!s) return;
+      const next = { ...train, to: s.name, arrive: s.time };
+      setTrain(next);
+      onFill(next);
+    };
     return (
-      <div className="flex flex-col gap-1.5 rounded-[14px] border-[1.5px] border-primary bg-primary-soft p-3.5">
+      <div className="flex flex-col gap-2 rounded-[14px] border-[1.5px] border-primary bg-primary-soft p-3.5">
         <div className="flex items-center justify-between">
           <span className={t.kicker}>예매한 열차로 채웠어요{train.demo && ' · 데모 시간'}</span>
           <button type="button" onClick={() => setOpen(true)} className={btn.textLink}>바꾸기</button>
         </div>
-        <span className={`text-[15px] font-bold ${t.num}`}>{train.type} {train.no} · {train.from} → {train.to}</span>
+        <span className={`text-[15px] font-bold ${t.num}`}>{train.type} {train.no} · {train.from} {train.depart} 출발</span>
+        <label className="flex items-center gap-2">
+          <span className="shrink-0 text-[13px] font-bold">내릴 역</span>
+          <select aria-label="내릴 역" value={train.to} onChange={(e) => getOff(e.target.value)} className={`${btn.field} h-10 min-w-0 flex-1 ${t.num}`}>
+            {train.stops.slice(1).map((s) => (
+              <option key={s.name} value={s.name}>{s.name} · {s.time} 도착</option>
+            ))}
+          </select>
+        </label>
         <span className={`${t.desc} ${t.num}`}>도착 {train.date && md(train.date)}{train.arrive}</span>
+        {!train.demo && <span className="text-[11px] text-sub">코레일 공개 시간표 기준이에요 · 실시간 지연은 반영 안 돼요</span>}
       </div>
     );
   }
@@ -56,7 +72,7 @@ export default function TrainFill({ defaultDate, onFill }: { defaultDate: string
     return (
       <button type="button" onClick={() => setOpen(true)} className="flex flex-col items-start gap-0.5 rounded-[14px] border-[1.5px] border-dashed border-primary bg-primary-soft px-3.5 py-3 text-left">
         <span className="font-display text-[15px] text-primary-ink">예매 정보로 도착 시간 채우기</span>
-        <span className={t.desc}>선택 · KTX·SRT 열차번호를 넣으면 도착역과 시간이 자동으로 들어가요 · 안 써도 아래에 직접 넣으면 돼요</span>
+        <span className={t.desc}>선택 · KTX·SRT 열차번호를 넣으면 코레일 시간표로 도착역과 시간이 들어가요 · 안 써도 아래에 직접 넣으면 돼요</span>
       </button>
     );
   }
