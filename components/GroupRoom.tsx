@@ -10,7 +10,7 @@ import { track } from '@/lib/analytics';
 import { getAnonToken } from '@/lib/anon';
 import { STATIONS, findStation, meetingOptions, type Station } from '@/lib/midpoint';
 import SeatTable, { lockFoot, seatRule, createRule } from './SeatTable';
-import ShareButtons, { useCopy } from './ShareButtons';
+import ShareButtons, { InviteButton, useCopy } from './ShareButtons';
 import StoreCard from './StoreCard';
 import { PreviewRow } from './StoreRow';
 import SourceNote from './SourceNote';
@@ -249,10 +249,8 @@ export default function GroupRoom({ initial, live }: { initial: GroupState; live
           </div>
         )}
         <div className="flex flex-col gap-2">
-          <button type="button" className={btn.primary} onClick={() => copy(shareUrl(), '초대 링크를 복사했어요')}>
-            빈자리 채울 친구 부르기
-          </button>
-          <ShareButtons url={shareUrl} title={g.title} text={`${g.when} ${g.place} 근처 · 결제 데이터로 고른 후보 3곳 중에 투표해 줘`} />
+          <InviteButton url={shareUrl} text={`[밥콕] ${g.title}\n${g.when} · ${g.place} 근처\n결제 데이터로 고른 후보 3곳 중에 같이 골라 줘!`} />
+          <ShareButtons url={shareUrl} />
           <span className={`text-center ${t.desc}`}>방장이 아니어도 누구나 부를 수 있어요</span>
         </div>
         <div className="flex flex-col gap-2">

@@ -134,7 +134,7 @@ export default function CreateForm({
         </Section>
 
         <Section title="2. 언제 먹을까요?">
-          <div className="grid grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2.5">
             <PickerInput type="date" aria-label="날짜" value={date} onChange={(e) => setDate(e.target.value)} required />
             <TimeSelect aria-label="시간" value={time} onChange={setTime} required />
           </div>
