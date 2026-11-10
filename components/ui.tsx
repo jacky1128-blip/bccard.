@@ -6,11 +6,11 @@ export const SERVICE_TAGLINE = '결제로 고른 한 끼';
 export const LOGO_BLUE = '#2E5E9F'; // 로고 마크 전용 색 (버튼 등 화면 파랑은 --primary)
 
 /* ---------- 글자 스타일 (모바일 390px 기준) ----------
- * 주아체(font-display)는 굵기가 400 하나뿐 → font-bold 금지, 크기로 위계
+ * 도현체(font-display)는 굵기가 400 하나뿐 → font-bold 금지, 크기로 위계
  * 숫자(순위·%·시간·거리)는 Pretendard + tabular-nums 로 자리 맞춤
  */
 export const t = {
-  // 주아체
+  // 도현체
   logo: 'font-display text-[18px] leading-none',
   // 작은 폰(359px 이하)만 조금 줄임 · 기본 모바일 크기는 그대로
   pageTitle: 'font-display text-[28px] leading-[1.3] max-[359px]:text-[clamp(23px,7.6vw,27px)]',
@@ -31,7 +31,7 @@ export const t = {
   num: 'tabular-nums',
 };
 
-/* ---------- 버튼 (크기 4단계, 글씨는 모두 주아체 15px) ----------
+/* ---------- 버튼 (크기 4단계, 글씨는 모두 도현체 15px) ----------
  *  lg   56px · 화면 주요 버튼, 전체 너비 버튼
  *  md   48px · 카드 안 버튼, 공유, 선택 토글
  *  sm   36px · 줄 옆 작은 버튼
@@ -113,7 +113,7 @@ export function TitleHeader({ back, title, right }: { back: string; title: strin
   );
 }
 
-// 큰 제목 묶음: 위 안내 줄(파랑) + 제목(주아체 28) + 아래 설명(회색)
+// 큰 제목 묶음: 위 안내 줄(파랑) + 제목(도현체 28) + 아래 설명(회색)
 export function PageTitle({ kicker, title, desc }: { kicker?: React.ReactNode; title: React.ReactNode; desc?: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">

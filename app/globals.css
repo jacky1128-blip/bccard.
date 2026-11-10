@@ -29,11 +29,11 @@
   --color-map: var(--map);
 }
 
-/* 글꼴: font-sans = Pretendard (본문·데이터), font-display = 배민 주아체 (제목·가게 이름·버튼)
-   --font-jua 는 app/layout.tsx 의 next/font 가 <html>에 넣어 줌 */
+/* 글꼴: font-sans = Pretendard (본문·데이터), font-display = 배민 도현체 (제목·가게 이름·버튼)
+   --font-dohyeon 은 app/layout.tsx 의 next/font 가 <html>에 넣어 줌 */
 @theme {
   --font-sans: "Pretendard Variable", Pretendard, system-ui, sans-serif;
-  --font-display: var(--font-jua), "Pretendard Variable", Pretendard, sans-serif;
+  --font-display: var(--font-dohyeon), "Pretendard Variable", Pretendard, sans-serif;
 }
 
 @layer base {
