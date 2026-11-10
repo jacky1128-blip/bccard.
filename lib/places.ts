@@ -76,7 +76,14 @@ async function fromCoord(lat: number, lng: number): Promise<ResolvedPlace | null
 
 export const isCoord = (s: string) => COORD.test(s.trim());
 
-export async function resolvePlace(input: string): Promise<Place | null> {
+// 장소 고르는 규칙(lib/placePick)이 바뀌면 PICK_VERSION 을 올려서 예전 캐시 결과를 쓰지 않음
+const PICK_VERSION = 2;
+export function resolvePlace(input: string): Promise<Place | null> {
+  return resolvePlaceCached(input, PICK_VERSION);
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- version 은 캐시 키용
+async function resolvePlaceCached(input: string, version: number): Promise<Place | null> {
   'use cache';
   cacheLife('weeks');
 
