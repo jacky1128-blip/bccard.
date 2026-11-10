@@ -8,7 +8,7 @@
 - **장소 → 좌표**: 키 없이 동작 (k-skill 카카오 키워드 검색). 네이버 지역 검색은 쓰지 않기로 함 (1-1 참고)
 - **지도 핀·도보 거리**: 잇플 응답의 TM128 좌표를 위경도로 변환해서 계산 (카카오 좌표와 평균 8m 차이 확인). 네이버 지도 키가 없어도 자리표시 지도에 실제 상대 위치로 핀이 찍힘
 - **추천 규칙**: 영업 예상 시간 · 혼잡 시간대 · 휴무 요일 · 못 먹는 거(업종 기준) · 도보 거리 · 상황별 가산점으로 상위 3곳
-- **추천 이유**: Anthropic 키가 있으면 AI(`claude-opus-5-5`)가 잇플 필드만 근거로 작성, 없으면 같은 필드로 만든 규칙 문장 (화면에 "AI 추천 이유" / "추천 이유"로 구분 표시)
+- **추천 이유**: Anthropic 키가 있으면 AI(`claude-haiku-5-5`)가 잇플 필드만 근거로 작성, 없으면 같은 필드로 만든 규칙 문장 (화면에 "AI 추천 이유" / "추천 이유"로 구분 표시)
 - **모임 저장**: Supabase 연결 완료 (2026-11-09). 만들기 → 다른 브라우저에서 참여 → 투표 → 방장 확정, 중간에서 만나요 장소 바꾸기까지 실제 DB로 확인. `SUPABASE_DB_URL`이 없으면 화면 데모로 동작
 - **경기 일정**: KBO·K리그 공식 데이터로 날짜별 일정 자동 불러오기 (키 없음)
 - **카카오톡 공유·GA4**: 코드 완성, 키를 넣으면 켜짐
@@ -25,7 +25,7 @@
 | 상태 | 무엇 | 어디서 | `.env.local` 변수 | 없으면 |
 |---|---|---|---|---|
 | ✅ 입력 완료 | Supabase (모임 저장) | supabase.com 대시보드 → 상단 Connect → Transaction pooler (포트 6543) | `SUPABASE_DB_URL` | 모임이 화면 데모로만 동작 |
-| ★ 1순위 | Anthropic (AI 추천 이유) | platform.claude.com → API Keys → Create Key (크레딧 필요) | `ANTHROPIC_API_KEY` (`LLM_MODEL` 비워두면 `claude-opus-5-5`) | 규칙으로 만든 추천 이유 |
+| ★ 1순위 | Anthropic (AI 추천 이유) | platform.claude.com → API Keys → Create Key (크레딧 필요) | `ANTHROPIC_API_KEY` (`LLM_MODEL` 비워두면 `claude-haiku-5-5`) | 규칙으로 만든 추천 이유 |
 | 2순위 | 카카오톡 공유 | developers.kakao.com → 애플리케이션 추가 → 앱 키 → JavaScript 키 | `NEXT_PUBLIC_KAKAO_JS_KEY` | 카카오톡 버튼이 링크 복사로 동작 |
 | 3순위 | GA4 | analytics.google.com → 측정 시작 → 속성(대한민국·KRW) → 웹 스트림 → 측정 ID `G-…` | `NEXT_PUBLIC_GA_ID` | 이벤트 수집 안 함 |
 | 선택 | 네이버 지도 + 지오코딩 | console.ncloud.com → Maps → Application 등록 (Dynamic Map, Geocoding 선택). NCP 가입 필요 | `NEXT_PUBLIC_NAVER_MAP_KEY_ID`·`NAVER_MAP_KEY_ID`(같은 Client ID), `NAVER_MAP_KEY`(Client Secret) | 자리표시 지도 (핀 위치는 실제 상대 위치) |

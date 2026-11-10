@@ -9,7 +9,8 @@ import type { Mode } from '@/types/group';
 import { MODES } from './modes';
 import { fanLabel, isAllDay, roundHalfHour } from './view';
 
-const MODEL = process.env.LLM_MODEL || 'claude-opus-5-5';
+// 짧은 문장 몇 줄이라 가장 싼 Haiku 로 충분 (Opus 5.5 대비 약 1/40 가격)
+const MODEL = process.env.LLM_MODEL || 'claude-haiku-5-5';
 
 export const llmConfigured = () => !!process.env.ANTHROPIC_API_KEY;
 
@@ -90,9 +91,7 @@ async function generate(items: EatplItem[], ctx: ReasonContext): Promise<string[
   const res = await client.beta.messages.parse({
     model: MODEL,
     max_tokens: 16000,
-    // 정책상 거절되면 서버가 기본 대체 모델로 다시 시도
-    betas: ['server-side-fallback-2026-07-01'],
-    fallbacks: 'default',
+    // Haiku 는 서버 대체 모델(fallbacks)을 지원하지 않음 → 거절·실패하면 규칙 문장으로
     system: SYSTEM,
     output_config: { effort: 'low', format: jsonSchemaOutputFormat(schema) },
     messages: [{ role: 'user', content: `아래 후보마다 추천 이유를 써 줘.

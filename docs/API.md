@@ -63,7 +63,7 @@
 
 ## 6. LLM · Anthropic Messages API · `lib/llm.ts`
 - 서버에서만 호출, 후보 3곳 + 잇플 필드 + 상황·못 먹는 거만 입력 (전화·좌표·링크는 안 넘김)
-- 모델 `claude-opus-5-5` (`LLM_MODEL`로 변경), effort `low`, JSON 스키마 출력, 정책 거절 시 서버 기본 대체 모델(`fallbacks: "default"`)
+- 모델 `claude-haiku-5-5` (`LLM_MODEL`로 변경), effort `low`, JSON 스키마 출력, 거절·실패 시 규칙 문장으로 대체
 - 같은 후보·상황은 하루 캐시, 모임은 만들 때 1회 호출 후 `candidates.ai_reason`에 저장
 - 키가 없거나 실패하면 같은 필드로 만든 규칙 문장(`ruleReason`)으로 대체
 
