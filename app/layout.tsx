@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Jua } from "next/font/google";
 import Script from "next/script";
-import { Suspense } from "react";
 // Pretendard: 필요한 글자만 내려받는 dynamic subset
 import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 import "./globals.css";
@@ -28,9 +27,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-dvh bg-white font-sans md:bg-fill">
         {/* 폭 제한은 화면마다 (폼·결과 480px, 첫 화면·순위·추천은 넓게) */}
         <div className="relative flex min-h-dvh w-full flex-col">
-          <Suspense fallback={null}>
-            <NavTracker />
-          </Suspense>
+          <NavTracker />
           {children}
         </div>
         {GA_ID && (

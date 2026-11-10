@@ -65,7 +65,14 @@ export default function HomeView({
     const els = [headRef.current, listRef.current?.firstElementChild as HTMLElement | null, footRef.current];
     if (els.some((x) => !x)) return;
     // 목록 칸은 시트를 채우려고 늘어나므로, 늘어난 칸이 아니라 안의 내용 높이를 잼
-    const measure = () => setNatural(headRef.current!.offsetHeight + listRef.current!.firstElementChild!.getBoundingClientRect().height + footRef.current!.offsetHeight + 14);
+    const measure = () => {
+      // 화면을 떠난 직후에도 한 번 더 불릴 수 있어서 요소가 없으면 무시
+      const head = headRef.current;
+      const list = listRef.current?.firstElementChild;
+      const foot = footRef.current;
+      if (!head || !list || !foot) return;
+      setNatural(head.offsetHeight + list.getBoundingClientRect().height + foot.offsetHeight + 14);
+    };
     const ro = new ResizeObserver(measure);
     els.forEach((x) => ro.observe(x!));
     measure();
