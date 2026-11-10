@@ -27,22 +27,54 @@ const persist = (k: string, v: Trip | null) => {
   }
 };
 
-let authFailed = false;
+let authFailed = false; // 키 문제 또는 오늘 한도 소진 → 이 탭에서는 더 부르지 않음
 
-export function transitTime(from: Pt, to: Pt): Promise<Trip | null> {
+// 한꺼번에 많이 부르면 ODsay 가 429(Too Many Requests)로 거절 → 동시에 2개까지, 시작 간격 150ms
+const MAX_IN_FLIGHT = 2;
+const GAP_MS = 150;
+let inFlight = 0;
+let lastStart = 0;
+const waiting: (() => void)[] = [];
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+async function slot<T>(fn: () => Promise<T>): Promise<T> {
+  if (inFlight >= MAX_IN_FLIGHT) await new Promise<void>((r) => waiting.push(r));
+  inFlight++;
+  const wait = lastStart + GAP_MS - Date.now();
+  lastStart = Math.max(Date.now(), lastStart + GAP_MS);
+  if (wait > 0) await sleep(wait);
+  try {
+    return await fn();
+  } finally {
+    inFlight--;
+    waiting.shift()?.();
+  }
+}
+
+export function transitTime(from: Pt, to: Pt, retry = false): Promise<Trip | null> {
   if (!KEY || authFailed) return Promise.resolve(null);
   const k = [from.lng, from.lat, to.lng, to.lat].map((x) => x.toFixed(4)).join(',');
   if (k in saved) return Promise.resolve(saved[k]);
   const hit = memo.get(k);
-  if (hit) return hit;
+  if (hit && !retry) return hit;
   const p = (async () => {
     try {
       const qs = new URLSearchParams({ apiKey: KEY, SX: String(from.lng), SY: String(from.lat), EX: String(to.lng), EY: String(to.lat), OPT: '0', SearchPathType: '0' });
-      const res = await fetch(`https://api.odsay.com/v1/api/searchPubTransPathT?${qs}`, { signal: AbortSignal.timeout(10_000) });
-      const j = (await res.json()) as {
+      type Res = {
         error?: { code?: string; message?: string }[] | { code?: string; msg?: string };
         result?: { path?: { info: { totalTime: number; subwayTransitCount?: number; busTransitCount?: number } }[] };
       };
+      const call = () => slot(async () => authFailed ? ({ error: { code: 'stop' } } as Res) : (await fetch(`https://api.odsay.com/v1/api/searchPubTransPathT?${qs}`, { signal: AbortSignal.timeout(10_000) })).json() as Promise<Res>);
+      let j = await call();
+      // 하루 한도 소진이면 오늘은 더 부르지 않음 (다시 불러도 안 됨)
+      if (j.error && /quota/i.test(JSON.stringify(j.error))) {
+        authFailed = true;
+        return null;
+      }
+      // 잠깐 몰려서 거절(Too Many Requests)이면 쉬고 두 번까지 다시
+      for (let i = 0; i < 2 && j.error && /Too Many/i.test(JSON.stringify(j.error)); i++) {
+        await sleep(700 * (i + 1));
+        j = await call();
+      }
       if (j.error) {
         const msg = JSON.stringify(j.error);
         if (/ApiKey|auth/i.test(msg)) authFailed = true; // 키 문제면 더 부르지 않음
@@ -65,5 +97,7 @@ export function transitTime(from: Pt, to: Pt): Promise<Trip | null> {
     }
   })();
   memo.set(k, p);
+  // 실패(null)는 기억하지 않음 → 다음에 다시 시도
+  p.then((t) => t || memo.delete(k));
   return p;
 }
