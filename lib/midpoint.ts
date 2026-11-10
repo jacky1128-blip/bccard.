@@ -37,15 +37,18 @@ export function distanceKm(a: { lat: number; lng: number }, b: { lat: number; ln
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
-// 직선거리로 대충 잡은 지하철 시간 (평균 시속 약 25km + 갈아타기·걷기 8분). 실제 시간은 지하철 API 연결 후
+// 직선거리로 대충 잡은 지하철 시간 (평균 시속 약 25km + 갈아타기·걷기 8분). ODsay 키가 있으면 lib/useMeet 이 실제 시간으로 바꿈
 export const estimateMinutes = (km: number) => (km < 0.3 ? 0 : Math.round(km * 2.4 + 8));
 
 export type MeetingOption = {
   station: Station;
-  legs: { from: Station; km: number; min: number }[];
+  legs: { from: Station; km: number; min: number; transfers?: number }[];
   maxMin: number;  // 가장 오래 걸리는 사람
   gapMin: number;  // 제일 오래 걸리는 사람 - 제일 빨리 오는 사람
+  real?: boolean;  // true: ODsay 실제 대중교통 시간 / 없으면 직선거리 어림값
 };
+
+export const byFairness = (a: MeetingOption, b: MeetingOption) => a.maxMin - b.maxMin || a.gapMin - b.gapMin;
 
 // 가장 먼 사람의 시간이 가장 짧은 역 순서 (같으면 시간 차이가 작은 순)
 export function meetingOptions(origins: Station[], limit = 3, candidates: Station[] = STATIONS): MeetingOption[] {
@@ -58,7 +61,7 @@ export function meetingOptions(origins: Station[], limit = 3, candidates: Statio
     const mins = legs.map((l) => l.min);
     return { station, legs, maxMin: Math.max(...mins), gapMin: Math.max(...mins) - Math.min(...mins) };
   })
-    .sort((a, b) => a.maxMin - b.maxMin || a.gapMin - b.gapMin)
+    .sort(byFairness)
     .slice(0, limit);
 }
 

@@ -20,17 +20,18 @@ export default function MidpointPicker({
   onMyOrigin?: (station: string) => void; // 첫 칸(나)의 출발역 → 모임 저장 시 방장 출발역
 }) {
   const [origins, setOrigins] = useState<string[]>(['', '']);
-  const { resolved, options, loading } = useMeet(origins);
+  const { resolved, options, loading, real } = useMeet(origins);
+  const [touched, setTouched] = useState(false); // 사용자가 후보를 직접 골랐는지
   const chosen = options.find((o) => stationLabel(o.station.name) === value) ?? options[0];
   // 결과의 각 줄이 몇 번째 사람인지 (찾은 역만 계산에 들어감)
   const people = resolved.map((s, i) => (s ? i : -1)).filter((i) => i >= 0);
 
-  // 추천이 바뀌면 가장 공평한 역을 장소로 채움 (지금 장소가 후보 중 하나면 그대로)
+  // 추천이 바뀌면 가장 공평한 역을 장소로 채움 (직접 고른 역이 아직 후보에 있으면 그대로)
   const best = options[0] ? stationLabel(options[0].station.name) : '';
   const valueInOptions = options.some((o) => stationLabel(o.station.name) === value);
   useEffect(() => {
-    if (best && !valueInOptions) onPick(best);
-  }, [best, valueInOptions, onPick]);
+    if (best && (!touched || !valueInOptions)) onPick(best);
+  }, [best, touched, valueInOptions, onPick]);
 
   const mine = resolved[0] ? origins[0] : '';
   useEffect(() => {
@@ -91,7 +92,10 @@ export default function MidpointPicker({
                 key={op.station.name}
                 type="button"
                 aria-pressed={op === chosen}
-                onClick={() => onPick(stationLabel(op.station.name))}
+                onClick={() => {
+                  setTouched(true);
+                  onPick(stationLabel(op.station.name));
+                }}
                 className={op === chosen ? btn.pillOn : btn.pillOff}
               >
                 {stationLabel(op.station.name)} · {op.maxMin === 0 ? '바로 여기' : `최대 ${op.maxMin}분`}
@@ -102,11 +106,14 @@ export default function MidpointPicker({
             {chosen.legs.map((l, k) => (
               <li key={k} className={`flex justify-between ${t.meta}`}>
                 <span>{WHO(people[k] ?? k)} · {stationLabel(l.from.name)}</span>
-                <span className="font-bold text-ink">{l.min === 0 ? '바로 여기' : `약 ${l.min}분`}</span>
+                <span className="font-bold text-ink">
+                  {l.min === 0 ? '바로 여기' : `약 ${l.min}분`}
+                  {chosen.real && l.min > 0 && <span className="ml-1 font-normal text-sub">{l.transfers ? `환승 ${l.transfers}번` : '환승 없음'}</span>}
+                </span>
               </li>
             ))}
           </ul>
-          <span className="text-[11px] text-sub">직선거리로 어림잡은 시간이에요 · 실제 지하철 시간은 연결 후 반영</span>
+          <span className="text-[11px] text-sub">{real ? '실제 대중교통 시간이에요 (ODsay)' : loading ? '실제 대중교통 시간 확인 중…' : '직선거리로 어림잡은 시간이에요'}</span>
         </div>
       ) : (
         <span className={t.desc}>{loading ? '역을 찾는 중…' : '2명 이상 출발역을 넣으면 중간역을 찾아드려요'}</span>

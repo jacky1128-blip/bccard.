@@ -124,8 +124,8 @@ function useGroup(initial: GroupState, live: boolean) {
 /* ---------- 중간에서 만나요: 들어온 사람들 출발역 → 공평한 역 ---------- */
 function useMeeting(g: GroupState) {
   // 출발역은 전국 어디든 (서버가 카카오 지하철역으로 찾음)
-  const { resolved, options } = useMeet(g.participants.map((p) => p.origin ?? ''), 1);
-  return { count: resolved.filter(Boolean).length, best: options[0] };
+  const { resolved, options, real } = useMeet(g.participants.map((p) => p.origin ?? ''), 1);
+  return { count: resolved.filter(Boolean).length, best: options[0], real };
 }
 
 export default function GroupRoom({ initial, live }: { initial: GroupState; live: boolean }) {
@@ -240,7 +240,7 @@ export default function GroupRoom({ initial, live }: { initial: GroupState; live
                     {stationLabel(best.station.name)}으로 후보 다시 찾기
                   </button>
                 )}
-                <span className="text-[11px] text-sub">직선거리로 어림잡은 시간이에요</span>
+                <span className="text-[11px] text-sub">{meeting.real ? '실제 대중교통 시간이에요 (ODsay)' : '직선거리로 어림잡은 시간이에요'}</span>
               </>
             ) : (
               <span className={t.desc}>2명 이상 출발역을 넣으면 공평한 중간역을 찾아드려요</span>
