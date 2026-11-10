@@ -113,7 +113,7 @@ export default function MidpointPicker({
               </li>
             ))}
           </ul>
-          <span className="text-[11px] text-sub">{real ? '실제 대중교통 시간이에요 (ODsay)' : loading ? '실제 대중교통 시간 확인 중…' : '직선거리로 어림잡은 시간이에요'}</span>
+          <span className="text-[11px] text-sub">{real ? '실제 대중교통 시간이에요' : loading ? '실제 대중교통 시간 확인 중…' : '직선거리로 어림잡은 시간이에요'}</span>
         </div>
       ) : (
         <span className={t.desc}>{loading ? '역을 찾는 중…' : '2명 이상 출발역을 넣으면 중간역을 찾아드려요'}</span>

@@ -240,7 +240,7 @@ export default function GroupRoom({ initial, live }: { initial: GroupState; live
                     {stationLabel(best.station.name)}으로 후보 다시 찾기
                   </button>
                 )}
-                <span className="text-[11px] text-sub">{meeting.real ? '실제 대중교통 시간이에요 (ODsay)' : '직선거리로 어림잡은 시간이에요'}</span>
+                <span className="text-[11px] text-sub">{meeting.real ? '실제 대중교통 시간이에요' : '직선거리로 어림잡은 시간이에요'}</span>
               </>
             ) : (
               <span className={t.desc}>2명 이상 출발역을 넣으면 공평한 중간역을 찾아드려요</span>
