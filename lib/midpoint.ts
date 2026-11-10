@@ -1,5 +1,5 @@
 // "중간에서 만나요": 각자 출발역 → 다 같이 가기 공평한 역 추천
-// 지금은 주요 역 좌표표 + 직선거리로 계산하는 데모.
+// 역 찾기는 서버(lib/stations.ts, 카카오 지하철역 검색). 여기는 계산만: 직선거리로 어림잡은 시간
 // TODO(키 필요): 실제 지하철 소요 시간은 경로 API(ODsay 등)가 필요함. k-skill 서울 지하철은 실시간 도착 정보만 있어 소요 시간 계산에 못 씀
 
 export type Station = { name: string; lat: number; lng: number };
@@ -48,9 +48,9 @@ export type MeetingOption = {
 };
 
 // 가장 먼 사람의 시간이 가장 짧은 역 순서 (같으면 시간 차이가 작은 순)
-export function meetingOptions(origins: Station[], limit = 3): MeetingOption[] {
+export function meetingOptions(origins: Station[], limit = 3, candidates: Station[] = STATIONS): MeetingOption[] {
   if (origins.length < 2) return [];
-  return STATIONS.map((station) => {
+  return candidates.map((station) => {
     const legs = origins.map((from) => {
       const km = distanceKm(from, station);
       return { from, km, min: estimateMinutes(km) };
@@ -61,3 +61,6 @@ export function meetingOptions(origins: Station[], limit = 3): MeetingOption[] {
     .sort((a, b) => a.maxMin - b.maxMin || a.gapMin - b.gapMin)
     .slice(0, limit);
 }
+
+// 화면 표시용 역 이름 ("강남" → "강남역", "서울역" → "서울역")
+export const stationLabel = (name: string) => (name.endsWith('역') ? name : `${name}역`);

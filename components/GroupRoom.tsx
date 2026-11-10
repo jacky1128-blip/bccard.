@@ -2,13 +2,14 @@
 // 모임 방: 참여(B2) → 대기(B3) → 투표(B4) → 확정(B5)
 // live  : DB(Supabase) 연결됨 → /api/groups/[id] 로 상태를 주고받고 4초마다 새로고침
 // !live : 키가 없을 때 화면 상태로만 흉내 내는 데모 (친구 입장 버튼 제공)
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { GroupState } from '@/types/group';
 import { MODES } from '@/lib/modes';
 import { track } from '@/lib/analytics';
 import { getAnonToken } from '@/lib/anon';
-import { STATIONS, findStation, meetingOptions, type Station } from '@/lib/midpoint';
+import { STATIONS, stationLabel } from '@/lib/midpoint';
+import { useMeet } from '@/lib/useMeet';
 import SeatTable, { lockFoot, seatRule, createRule } from './SeatTable';
 import ShareButtons, { InviteButton, useCopy } from './ShareButtons';
 import StoreCard from './StoreCard';
@@ -122,10 +123,9 @@ function useGroup(initial: GroupState, live: boolean) {
 
 /* ---------- 중간에서 만나요: 들어온 사람들 출발역 → 공평한 역 ---------- */
 function useMeeting(g: GroupState) {
-  return useMemo(() => {
-    const origins = g.participants.map((p) => (p.origin ? findStation(p.origin) : undefined)).filter((s): s is Station => !!s);
-    return { count: origins.length, best: meetingOptions(origins, 1)[0] };
-  }, [g.participants]);
+  // 출발역은 전국 어디든 (서버가 카카오 지하철역으로 찾음)
+  const { resolved, options } = useMeet(g.participants.map((p) => p.origin ?? ''), 1);
+  return { count: resolved.filter(Boolean).length, best: options[0] };
 }
 
 export default function GroupRoom({ initial, live }: { initial: GroupState; live: boolean }) {
@@ -182,9 +182,8 @@ export default function GroupRoom({ initial, live }: { initial: GroupState; live
         {g.mid && (
           <div className="flex flex-col gap-2">
             <SectionTitle>어디서 출발해요? <span className={`font-sans ${t.desc}`}>중간에서 만나요</span></SectionTitle>
-            <datalist id="stations">{STATIONS.map((s) => <option key={s.name} value={`${s.name}역`} />)}</datalist>
+            <datalist id="stations">{STATIONS.map((s) => <option key={s.name} value={stationLabel(s.name)} />)}</datalist>
             <input list="stations" aria-label="내 출발역" className={btn.field} value={origin} onChange={(e) => setOrigin(e.target.value)} placeholder="출발역 (예: 홍대입구)" />
-            {origin && !findStation(origin) && <span className="text-xs text-[#C92A2A]">목록에 있는 역 이름으로 넣어 주세요</span>}
             <span className={t.desc}>다들 넣은 출발역으로 방장이 공평한 중간역을 정해요</span>
           </div>
         )}
@@ -203,7 +202,7 @@ export default function GroupRoom({ initial, live }: { initial: GroupState; live
           </div>
         </div>
         {errorBox}
-        <button type="button" disabled={busy} className={btn.primary + ' mt-auto'} onClick={() => actions.join(cant, findStation(origin) ? origin : '')}>
+        <button type="button" disabled={busy} className={btn.primary + ' mt-auto'} onClick={() => actions.join(cant, origin.trim())}>
           {g.status === 'voting' ? '참여하고 바로 투표하기' : '참여하고 투표 기다리기'}
         </button>
       </Page>
@@ -234,11 +233,11 @@ export default function GroupRoom({ initial, live }: { initial: GroupState; live
             {best ? (
               <>
                 <span className="text-[15px] font-bold">
-                  {best.station.name}역 · 가장 먼 사람 약 {best.maxMin}분
+                  {stationLabel(best.station.name)} · 가장 먼 사람 약 {best.maxMin}분
                 </span>
-                {g.me.isHost && `${best.station.name}역` !== g.place && (
-                  <button type="button" disabled={busy} onClick={() => actions.changePlace(`${best.station.name}역`)} className={btn.mdPrimary}>
-                    {best.station.name}역으로 후보 다시 찾기
+                {g.me.isHost && stationLabel(best.station.name) !== g.place && (
+                  <button type="button" disabled={busy} onClick={() => actions.changePlace(stationLabel(best.station.name))} className={btn.mdPrimary}>
+                    {stationLabel(best.station.name)}으로 후보 다시 찾기
                   </button>
                 )}
                 <span className="text-[11px] text-sub">직선거리로 어림잡은 시간이에요</span>

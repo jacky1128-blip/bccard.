@@ -1,18 +1,12 @@
 'use client';
 // 중간에서 만나요: 각자 출발역 입력 → 공평한 중간역 추천 → 고르면 모임 장소로
-import { useState } from 'react';
-import { STATIONS, findStation, meetingOptions, type Station } from '@/lib/midpoint';
+// 역은 전국 어디든 (서버가 카카오 지하철역 검색으로 찾음, lib/stations.ts)
+import { useEffect, useState } from 'react';
+import { STATIONS, stationLabel } from '@/lib/midpoint';
+import { useMeet } from '@/lib/useMeet';
 import { btn, t } from './ui';
 
 const WHO = (i: number) => (i === 0 ? '나' : `친구 ${i}`);
-
-// 입력값 → (몇 번째 사람, 역) 목록과 추천 결과
-function compute(origins: string[]) {
-  const people = origins
-    .map((o, i) => ({ i, station: findStation(o) }))
-    .filter((p): p is { i: number; station: Station } => !!p.station);
-  return { people, options: meetingOptions(people.map((p) => p.station)) };
-}
 
 export default function MidpointPicker({
   maxPeople,
@@ -26,22 +20,31 @@ export default function MidpointPicker({
   onMyOrigin?: (station: string) => void; // 첫 칸(나)의 출발역 → 모임 저장 시 방장 출발역
 }) {
   const [origins, setOrigins] = useState<string[]>(['', '']);
-  const { people, options } = compute(origins);
-  const chosen = options.find((o) => `${o.station.name}역` === value) ?? options[0];
+  const { resolved, options, loading } = useMeet(origins);
+  const chosen = options.find((o) => stationLabel(o.station.name) === value) ?? options[0];
+  // 결과의 각 줄이 몇 번째 사람인지 (찾은 역만 계산에 들어감)
+  const people = resolved.map((s, i) => (s ? i : -1)).filter((i) => i >= 0);
 
-  // 출발지가 바뀌면 가장 공평한 역을 바로 장소로 채움
-  const update = (next: string[]) => {
-    setOrigins(next);
-    onMyOrigin?.(findStation(next[0] ?? '') ? next[0] : '');
-    const best = compute(next).options[0];
-    if (best) onPick(`${best.station.name}역`);
-  };
+  // 추천이 바뀌면 가장 공평한 역을 장소로 채움 (지금 장소가 후보 중 하나면 그대로)
+  const best = options[0] ? stationLabel(options[0].station.name) : '';
+  const valueInOptions = options.some((o) => stationLabel(o.station.name) === value);
+  useEffect(() => {
+    if (best && !valueInOptions) onPick(best);
+  }, [best, valueInOptions, onPick]);
+
+  const mine = resolved[0] ? origins[0] : '';
+  useEffect(() => {
+    onMyOrigin?.(mine);
+  }, [mine, onMyOrigin]);
+
+  const update = (next: string[]) => setOrigins(next);
 
   return (
     <div className="flex flex-col gap-3 rounded-[14px] bg-fill p-4">
       <span className={t.sectionTitle}>각자 어디서 출발해요?</span>
+      {/* 자주 쓰는 역은 입력 도우미로만. 목록에 없는 역도 넣을 수 있어요 */}
       <datalist id="stations">
-        {STATIONS.map((s) => <option key={s.name} value={`${s.name}역`} />)}
+        {STATIONS.map((s) => <option key={s.name} value={stationLabel(s.name)} />)}
       </datalist>
 
       {origins.map((o, i) => (
@@ -67,7 +70,9 @@ export default function MidpointPicker({
               </button>
             )}
           </div>
-          {o && !findStation(o) && <span className="pl-16 text-xs text-[#C92A2A]">목록에 있는 역 이름으로 넣어 주세요</span>}
+          {o.trim() && !loading && resolved.length === origins.length && !resolved[i] && (
+            <span className="pl-16 text-xs text-[#C92A2A]">지하철역을 찾지 못했어요. 역 이름을 확인해 주세요</span>
+          )}
         </div>
       ))}
 
@@ -78,7 +83,7 @@ export default function MidpointPicker({
       )}
 
       {chosen ? (
-        <div className="flex flex-col gap-3 rounded-xl border-[1.5px] border-primary bg-white p-3.5">
+        <div className={`flex flex-col gap-3 rounded-xl border-[1.5px] border-primary bg-white p-3.5 transition-opacity ${loading ? 'opacity-60' : ''}`}>
           <span className={t.kicker}>가장 멀리 오는 사람 기준으로 공평한 곳</span>
           <div className="flex flex-wrap gap-1.5">
             {options.map((op) => (
@@ -86,17 +91,17 @@ export default function MidpointPicker({
                 key={op.station.name}
                 type="button"
                 aria-pressed={op === chosen}
-                onClick={() => onPick(`${op.station.name}역`)}
+                onClick={() => onPick(stationLabel(op.station.name))}
                 className={op === chosen ? btn.pillOn : btn.pillOff}
               >
-                {op.station.name}역 · 최대 {op.maxMin}분
+                {stationLabel(op.station.name)} · {op.maxMin === 0 ? '바로 여기' : `최대 ${op.maxMin}분`}
               </button>
             ))}
           </div>
           <ul className="flex flex-col gap-1">
             {chosen.legs.map((l, k) => (
               <li key={k} className={`flex justify-between ${t.meta}`}>
-                <span>{WHO(people[k].i)} · {l.from.name}역</span>
+                <span>{WHO(people[k] ?? k)} · {stationLabel(l.from.name)}</span>
                 <span className="font-bold text-ink">{l.min === 0 ? '바로 여기' : `약 ${l.min}분`}</span>
               </li>
             ))}
@@ -104,7 +109,7 @@ export default function MidpointPicker({
           <span className="text-[11px] text-sub">직선거리로 어림잡은 시간이에요 · 실제 지하철 시간은 연결 후 반영</span>
         </div>
       ) : (
-        <span className={t.desc}>2명 이상 출발역을 넣으면 중간역을 찾아드려요</span>
+        <span className={t.desc}>{loading ? '역을 찾는 중…' : '2명 이상 출발역을 넣으면 중간역을 찾아드려요'}</span>
       )}
     </div>
   );
