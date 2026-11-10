@@ -42,7 +42,9 @@ export default function ModeChips({
   const map = variant === 'map';
   return (
     // 좁은 화면: 줄바꿈 없이 가로 스크롤 + 오른쪽 끝을 흐리게 (더 있다는 표시)
-    <div className="no-scrollbar flex gap-1.5 overflow-x-auto pr-8 [mask-image:linear-gradient(to_right,#000_calc(100%-36px),transparent)]">
+    // 지도 위 칩은 손가락도 가로로만(touch-pan-x · 지도가 같이 안 움직이게). 방 만들기 화면은 칩 위에서도 세로로 페이지가 내려가야 해서 제외
+    // 가로로만: overflow-x 만 켜면 세로도 auto 가 돼서 그림자·터치 영역만큼 위아래로 흔들림 → 세로 막고, 그림자 자리는 py 로 확보
+    <div className={`no-scrollbar -my-1.5 flex ${map ? 'touch-pan-x' : ''} gap-1.5 overflow-x-auto overflow-y-hidden overscroll-x-contain py-1.5 pr-8 [mask-image:linear-gradient(to_right,#000_calc(100%-36px),transparent)]`}>
       {MODE_ORDER.map((m) => (
         <button
           key={m}
