@@ -42,16 +42,17 @@ async function Content({ searchParams }: { searchParams: Promise<SP> }) {
       />
       {!r.live && <DemoNote notFound={r.notFound} place={r.label} />}
       {first ? (
-        <>
+        // 모바일: 1순위 → 대안 세로 / 태블릿·PC: 왼쪽 1순위 크게, 오른쪽 대안 2곳 세로
+        <div className="flex flex-col gap-5 md:grid md:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] md:items-start md:gap-6">
           <Section title="지금 1순위">
             <StoreCard store={first} reason />
           </Section>
           {alts.length > 0 && <Section title="여기가 아니라면">{alts.map((s) => <AltRow key={s.key} store={s} />)}</Section>}
-        </>
+        </div>
       ) : (
         <p className={`rounded-2xl bg-fill py-10 text-center ${t.desc}`}>지금 문 연 곳이 없어요 · 전체 순위에서 여는 시간을 확인해 보세요</p>
       )}
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 md:grid md:grid-cols-2">
         <Link href={`/ranking?mode=${mode}${placeQs}`} className={btn.outline}>결제 순위 전체 보기</Link>
         <Link href={`/group/new?mode=${mode}${placeQs}`} className={btn.outline}>같이 먹을 사람 있으면 · 투표할 방 만들기</Link>
       </div>
@@ -61,7 +62,7 @@ async function Content({ searchParams }: { searchParams: Promise<SP> }) {
 
 export default function Page({ searchParams }: PageProps<'/pick'>) {
   return (
-    <Shell>
+    <Shell wide>
       <Suspense fallback={null}>
         <Content searchParams={searchParams} />
       </Suspense>

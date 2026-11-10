@@ -72,7 +72,7 @@ export default function TrainFill({ defaultDate, onFill }: { defaultDate: string
           <button key={x} type="button" aria-pressed={type === x} onClick={() => setType(x)} className={type === x ? btn.segOn : btn.segOff}>{x}</button>
         ))}
       </div>
-      <div className="grid grid-cols-[1fr_auto] gap-2">
+      <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,auto)] gap-2">
         <input
           aria-label="열차번호"
           inputMode="numeric"
@@ -81,7 +81,7 @@ export default function TrainFill({ defaultDate, onFill }: { defaultDate: string
           onChange={(e) => setNo(e.target.value.replace(/\D/g, '').slice(0, 6))}
           placeholder="열차번호 (예: 101)"
         />
-        <PickerInput type="date" aria-label="탑승 날짜" className="w-40" value={date} onChange={(e) => setDate(e.target.value)} />
+        <PickerInput type="date" aria-label="탑승 날짜" className="w-36 min-[360px]:w-40" value={date} onChange={(e) => setDate(e.target.value)} />
       </div>
       {error && <span className="text-xs text-[#C92A2A]">{error}</span>}
       <button type="button" onClick={load} disabled={loading || !no} className={btn.mdPrimary}>

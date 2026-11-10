@@ -12,12 +12,14 @@ export const LOGO_BLUE = '#2E5E9F'; // 로고 마크 전용 색 (버튼 등 화�
 export const t = {
   // 주아체
   logo: 'font-display text-[18px] leading-none',
-  pageTitle: 'font-display text-[28px] leading-[1.3]',
-  headerTitle: 'font-display text-[22px] leading-[1.3]', // 뒤로 가기 옆 화면 이름 (같이 정하기, 여행 등)
+  // 작은 폰(359px 이하)만 조금 줄임 · 기본 모바일 크기는 그대로
+  pageTitle: 'font-display text-[28px] leading-[1.3] max-[359px]:text-[clamp(23px,7.6vw,27px)]',
+  headerTitle: 'font-display text-[22px] leading-[1.3] max-[359px]:text-[19px]', // 뒤로 가기 옆 화면 이름 (같이 정하기, 여행 등)
   sectionTitle: 'font-display text-base leading-snug',
-  sheetTitle: 'font-display text-[19px] leading-snug',  // 첫 화면 시트 제목, 파란 안내 박스 제목
-  storeLg: 'font-display text-[18px] leading-snug',
-  storeSm: 'font-display text-[17px] leading-snug',
+  sheetTitle: 'font-display text-[19px] leading-snug max-[359px]:text-[17px]',  // 첫 화면 시트 제목, 파란 안내 박스 제목
+  // 긴 가게 이름은 2줄까지, 넘치면 …
+  storeLg: 'font-display text-[18px] leading-snug line-clamp-2 max-[359px]:text-[16px]',
+  storeSm: 'font-display text-[17px] leading-snug line-clamp-2 max-[359px]:text-[16px]',
   tag: 'font-display text-[13px]',
   aiLabel: 'font-display text-[13px] text-primary-ink',
   // Pretendard
@@ -39,8 +41,10 @@ export const t = {
 const LABEL = 'font-display text-[15px] leading-none no-underline transition disabled:opacity-40';
 const LG = `flex h-14 w-full items-center justify-center rounded-2xl ${LABEL}`;
 const MD = `flex h-12 w-full items-center justify-center rounded-xl ${LABEL}`;
-const SM = `flex h-9 shrink-0 items-center justify-center whitespace-nowrap rounded-[10px] px-3 ${LABEL}`;
-const CHIP = `flex h-9 shrink-0 items-center justify-center whitespace-nowrap rounded-full px-3.5 ${LABEL}`;
+// 36px 버튼·칩은 보이는 크기는 그대로, 누르는 영역만 위아래로 늘려 44px 확보
+const TOUCH = "relative after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']";
+const SM = `flex h-9 shrink-0 items-center justify-center whitespace-nowrap rounded-[10px] px-3 ${TOUCH} ${LABEL}`;
+const CHIP = `flex h-9 shrink-0 items-center justify-center whitespace-nowrap rounded-full px-3.5 ${TOUCH} ${LABEL}`;
 
 export const btn = {
   primary: `${LG} bg-primary text-white hover:brightness-110`,
@@ -51,7 +55,7 @@ export const btn = {
   smPrimary: `${SM} bg-primary text-white hover:brightness-110`,
   smSoft: `${SM} bg-primary-soft text-primary-ink hover:brightness-95`,
   smOutline: `${SM} border border-line-2 bg-white text-ink hover:bg-fill`,
-  textLink: `${LABEL} whitespace-nowrap text-primary-ink`,
+  textLink: `${LABEL} relative whitespace-nowrap text-primary-ink after:absolute after:-inset-x-1 after:-inset-y-3 after:content-['']`,
   pillOn: `${CHIP} border-[1.5px] border-primary bg-primary text-white`,
   pillOff: `${CHIP} border border-line bg-white text-ink hover:bg-fill`,
   chipDarkOn: `${CHIP} border-[1.5px] border-ink bg-ink text-white`,
@@ -124,8 +128,27 @@ export function SectionTitle({ children, as: Tag = 'h2' }: { children: React.Rea
   return <Tag className={t.sectionTitle}>{children}</Tag>;
 }
 
-export function Page({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  return <main className={`flex flex-1 flex-col gap-5 px-5 pb-6 pt-6 ${className}`}>{children}</main>;
+// 본문 틀: 기본은 가운데 최대 480px 한 열 (폼·결과·모임 화면). wide 는 태블릿·PC 에서 넓게 쓰는 화면 (AI 추천, 투표 3열)
+// PC 에선 회색 바탕 위 흰 종이처럼. 아래 여백은 아이폰 홈바(safe-area)만큼 더
+export function Page({ children, className = '', wide }: { children: React.ReactNode; className?: string; wide?: boolean }) {
+  return (
+    <main
+      className={`mx-auto flex w-full flex-1 flex-col gap-5 bg-white px-5 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] md:min-h-dvh md:shadow-[0_0_0_1px_var(--line)] ${
+        wide ? 'max-w-[480px] md:max-w-[920px] md:px-8' : 'max-w-[480px]'
+      } ${className}`}
+    >
+      {children}
+    </main>
+  );
+}
+
+// 모바일에선 화면 아래에 붙는 메인 버튼 자리, 태블릿·PC 에선 폼 바로 아래 (홈바만큼 아래 여백)
+export function BottomBar({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="sticky bottom-0 z-10 -mx-5 mt-auto bg-gradient-to-t from-white from-75% to-transparent px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:static md:mx-0 md:bg-none md:px-0 md:pt-2 md:pb-0">
+      {children}
+    </div>
+  );
 }
 
 export function Section({ title, children, gap = 'gap-2' }: { title?: React.ReactNode; children: React.ReactNode; gap?: string }) {

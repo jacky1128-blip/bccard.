@@ -34,12 +34,12 @@ async function Content({ params }: { params: P }) {
   const { minutes, dow } = kstNow();
   const r = await getStoresByMode(name, { at: minutes, day: dow, limit: 10 });
   const nearby = r.center ? await nearbyStations(r.center, r.label) : [];
-  return <RankingView initialMode={mode} storesByMode={r.storesByMode} fixedPlace={r.label} placeLabel={r.label} nearby={nearby} live={r.live} />;
+  return <RankingView initialMode={mode} storesByMode={r.storesByMode} fixedPlace={r.label} placeLabel={r.label} nearby={nearby} center={r.center} live={r.live} />;
 }
 
 export default function Page({ params }: PageProps<'/r/[place]/[mode]'>) {
   return (
-    <Shell>
+    <Shell wide className="lg:max-w-[1240px]">
       <Suspense fallback={null}>
         <Content params={params} />
       </Suspense>

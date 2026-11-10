@@ -19,13 +19,15 @@ export const metadata: Metadata = {
 // GA4 측정 ID (G-XXXX). 형식이 맞을 때만 태그를 넣음
 const GA_ID = /^G-[A-Z0-9]+$/.test(process.env.NEXT_PUBLIC_GA_ID ?? "") ? process.env.NEXT_PUBLIC_GA_ID : undefined;
 
-export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#ffffff" };
+// viewportFit cover: 아이폰 노치·홈바 영역까지 쓰고, 그만큼은 safe-area 여백으로 비움
+export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#ffffff", viewportFit: "cover" };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="ko" className={jua.variable}>
-      <body className="min-h-dvh font-sans">
-        <div className="relative mx-auto flex min-h-dvh w-full max-w-[430px] flex-col bg-white shadow-[0_0_0_1px_var(--line)]">
+      <body className="min-h-dvh bg-white font-sans md:bg-fill">
+        {/* 폭 제한은 화면마다 (폼·결과 480px, 첫 화면·순위·추천은 넓게) */}
+        <div className="relative flex min-h-dvh w-full flex-col">
           <Suspense fallback={null}>
             <NavTracker />
           </Suspense>

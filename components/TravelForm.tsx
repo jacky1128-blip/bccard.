@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { MODES } from '@/lib/modes';
 import PickerInput from './PickerInput';
 import TrainFill from './TrainFill';
-import { Page, PinIcon, Section, TitleHeader, btn, t } from './ui';
+import { BottomBar, Page, PinIcon, Section, TitleHeader, btn, t } from './ui';
 
 export default function TravelForm() {
   const router = useRouter();
@@ -47,9 +47,9 @@ export default function TravelForm() {
             <PinIcon />
             <input aria-label="도착역" className="flex-1 text-[15px] outline-none" value={place} onChange={(e) => setPlace(e.target.value)} required />
           </label>
-          <div className="grid grid-cols-[1fr_auto] gap-2">
+          <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,auto)] gap-2">
             <PickerInput type="date" aria-label="도착 날짜" value={date} onChange={(e) => setDate(e.target.value)} />
-            <PickerInput type="time" aria-label="도착 시간" className="w-32" value={time} onChange={(e) => setTime(e.target.value)} required />
+            <PickerInput type="time" aria-label="도착 시간" className="w-28 min-[360px]:w-32" value={time} onChange={(e) => setTime(e.target.value)} required />
           </div>
           <span className={t.desc}>도착 시간에 영업 중인 곳만 보여드려요</span>
         </Section>
@@ -62,7 +62,9 @@ export default function TravelForm() {
           </div>
         </Section>
 
-        <button className={btn.primary + ' mt-auto'}>도착하면 갈 곳 보기</button>
+        <BottomBar>
+          <button className={btn.primary}>도착하면 갈 곳 보기</button>
+        </BottomBar>
       </form>
     </Page>
   );

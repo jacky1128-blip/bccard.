@@ -281,7 +281,8 @@ export default function GroupRoom({ initial, live }: { initial: GroupState; live
   /* ---------- B4 투표 ---------- */
   if (step === 'vote') {
     return (
-      <Page>
+      // 투표: 태블릿 이상에선 후보 3곳을 가로 3열 카드로
+      <Page wide>
         <BrandHeader back={`/?mode=${g.mode}`} />
         <div className="flex flex-col gap-1.5">
           <span className={`${t.kicker} ${t.num}`}>투표 시작 · 지금까지 {total}명 투표</span>
@@ -308,6 +309,7 @@ export default function GroupRoom({ initial, live }: { initial: GroupState; live
         )}
         <div className="flex flex-col gap-3">
           <SectionTitle>후보 3곳 · 메뉴 보고 투표해요</SectionTitle>
+          <div className="flex flex-col gap-3 md:grid md:grid-cols-3 md:items-stretch">
           {g.stores.map((s) => {
             const mine = g.me.vote === s.key;
             return (
@@ -325,6 +327,7 @@ export default function GroupRoom({ initial, live }: { initial: GroupState; live
               />
             );
           })}
+          </div>
         </div>
         {errorBox}
         <SourceNote ai />

@@ -10,7 +10,7 @@ import ModeChips from './ModeChips';
 import PickerInput from './PickerInput';
 import MidpointPicker from './MidpointPicker';
 import { createRule } from './SeatTable';
-import { Page, Section, TitleHeader, btn, t } from './ui';
+import { BottomBar, Page, Section, TitleHeader, btn, t } from './ui';
 
 export default function CreateForm({
   initialMode,
@@ -85,7 +85,7 @@ export default function CreateForm({
   return (
     <Page>
       <TitleHeader back={back} title="같이 정하기" right="필수 3개" />
-      <form onSubmit={submit} className="flex flex-col gap-5">
+      <form onSubmit={submit} className="flex flex-1 flex-col gap-5">
         <div className="flex flex-col gap-2">
           <span className={t.desc}>이전 화면에서 고른 내용은 그대로예요. 원하면 바꿀 수 있어요.</span>
           <ModeChips variant="pills" value={mode} onChange={pickMode} />
@@ -151,10 +151,6 @@ export default function CreateForm({
           <span className={t.desc}>{createRule(headcount, mid)}</span>
         </Section>
 
-        {error && <p role="alert" className="rounded-xl bg-[#FFF0F0] px-3.5 py-2.5 text-[13px] text-[#C92A2A]">{error}</p>}
-        <button className={btn.primary} disabled={busy}>{busy ? '결제 데이터로 후보 찾는 중…' : '초대 링크 만들기'}</button>
-        {mid && <span className={`-mt-3 text-center ${t.desc}`}>친구들도 초대 링크에서 자기 출발역을 넣을 수 있어요</span>}
-
         <details className="group flex flex-col gap-2 rounded-[14px] bg-fill p-4">
           <summary className="flex cursor-pointer list-none items-center justify-between gap-2">
             <span className={t.sectionTitle}>지금 설정 그대로 시작할까요?</span>
@@ -179,6 +175,14 @@ export default function CreateForm({
             </label>
           </div>
         </details>
+        {/* 모바일: 화면 아래 고정 / 태블릿·PC: 폼 바로 아래 */}
+        <BottomBar>
+          <div className="flex flex-col gap-2">
+            {error && <p role="alert" className="rounded-xl bg-[#FFF0F0] px-3.5 py-2.5 text-[13px] text-[#C92A2A]">{error}</p>}
+            <button className={btn.primary} disabled={busy}>{busy ? '결제 데이터로 후보 찾는 중…' : '초대 링크 만들기'}</button>
+            {mid && <span className={`text-center ${t.desc}`}>친구들도 초대 링크에서 자기 출발역을 넣을 수 있어요</span>}
+          </div>
+        </BottomBar>
       </form>
     </Page>
   );

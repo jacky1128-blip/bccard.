@@ -8,7 +8,7 @@ export default function PickerInput({ className = '', onClick, ...props }: Props
   return (
     <input
       {...props}
-      className={`${btn.field} cursor-pointer tabular-nums ${className}`}
+      className={`${btn.field} min-w-0 cursor-pointer tabular-nums ${className}`}
       onClick={(e) => {
         onClick?.(e);
         try {

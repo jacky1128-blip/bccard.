@@ -5,12 +5,14 @@ import { Meta } from './StoreCard';
 import { t } from './ui';
 
 // 첫 화면 TOP 3 줄. 지도 핀과 연결: 핀을 누르면 이 줄이 강조되고, 줄을 누르면 그 핀이 펼쳐짐
-export function TopRow({ store, active = false, onSelect }: { store: StoreView; active?: boolean; onSelect?: () => void }) {
+export function TopRow({ store, active = false, onSelect, onHover }: { store: StoreView; active?: boolean; onSelect?: () => void; onHover?: (on: boolean) => void }) {
   return (
     <div
       role={onSelect ? 'button' : undefined}
       tabIndex={onSelect ? 0 : undefined}
       aria-pressed={onSelect ? active : undefined}
+      onMouseEnter={() => onHover?.(true)}
+      onMouseLeave={() => onHover?.(false)}
       onClick={(e) => {
         if ((e.target as HTMLElement).closest('a')) return; // 메뉴 보기는 그대로 잇플로
         onSelect?.();

@@ -14,22 +14,25 @@ export default function SeatTable({ headcount, joined, mid }: { headcount: numbe
 
   const Seat = ({ name, idx }: { name?: string; idx: number }) =>
     name ? (
-      <span className="flex size-10 items-center justify-center rounded-full bg-primary font-display text-[15px] text-white">{name}</span>
+      <span className="flex size-[clamp(34px,11.5cqw,48px)] items-center justify-center rounded-full bg-primary font-display text-[clamp(13px,4.3cqw,17px)] text-white">{name}</span>
     ) : idx === nextIdx ? (
-      <span className="flex size-10 items-center justify-center rounded-full border-2 border-dashed border-primary bg-primary-soft text-lg font-bold text-primary-ink">+</span>
+      <span className="flex size-[clamp(34px,11.5cqw,48px)] items-center justify-center rounded-full border-2 border-dashed border-primary bg-primary-soft text-lg font-bold text-primary-ink">+</span>
     ) : (
-      <span className="size-10 rounded-full border-[1.5px] border-dashed border-[#B8BCC2]" />
+      <span className="size-[clamp(34px,11.5cqw,48px)] rounded-full border-[1.5px] border-dashed border-[#B8BCC2]" />
     );
 
   return (
-    <div className="flex flex-col items-center gap-2.5">
-      <div className="flex justify-center gap-6">{rows[0].map(([n, i]) => <Seat key={i} name={n} idx={i} />)}</div>
-      <div className="flex h-[88px] w-[210px] flex-col items-center justify-center gap-0.5 rounded-full border-[1.5px] border-[#D5D8DC] bg-white">
+    // 식탁 그림은 들어 있는 상자 폭에 맞춰 비율 그대로 줄고 늘어남 (cqw = 상자 폭의 1%)
+    <div className="@container w-full">
+    <div className="flex flex-col items-center gap-[clamp(8px,3cqw,14px)]">
+      <div className="flex justify-center gap-[clamp(14px,7cqw,32px)]">{rows[0].map(([n, i]) => <Seat key={i} name={n} idx={i} />)}</div>
+      <div className="flex aspect-[210/88] w-[clamp(180px,62cqw,280px)] flex-col items-center justify-center gap-0.5 rounded-full border-[1.5px] border-[#D5D8DC] bg-white">
         {/* 들어온 사람 / 전체 자리. 투표 열림 기준(절반)은 아래 줄에 따로 */}
-        <span className="text-[26px] font-black tabular-nums text-primary">{Math.min(joined.length, headcount)} / {headcount}</span>
-        <span className="font-display text-[15px]">{mid ? '방장이 장소 정하는 중' : left > 0 ? `${left}명 더 오면 투표 시작` : '투표가 열렸어요'}</span>
+        <span className="text-[clamp(22px,7.5cqw,32px)] font-black tabular-nums text-primary">{Math.min(joined.length, headcount)} / {headcount}</span>
+        <span className="font-display text-[clamp(13px,4.3cqw,17px)]">{mid ? '방장이 장소 정하는 중' : left > 0 ? `${left}명 더 오면 투표 시작` : '투표가 열렸어요'}</span>
       </div>
-      <div className="flex justify-center gap-6">{rows[1].map(([n, i]) => <Seat key={i} name={n} idx={i} />)}</div>
+      <div className="flex justify-center gap-[clamp(14px,7cqw,32px)]">{rows[1].map(([n, i]) => <Seat key={i} name={n} idx={i} />)}</div>
+    </div>
     </div>
   );
 }

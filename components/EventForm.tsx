@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { MODES } from '@/lib/modes';
 import { addMinutes } from '@/lib/time';
 import PickerInput from './PickerInput';
-import { Page, PinIcon, Section, TitleHeader, btn, t } from './ui';
+import { BottomBar, Page, PinIcon, Section, TitleHeader, btn, t } from './ui';
 
 const VENUES = ['잠실종합운동장', '고척스카이돔', 'KSPO DOME'];
 const SHOW_START = '19:30';
@@ -145,7 +145,9 @@ export default function EventForm() {
           </span>
         </Section>
 
-        <button className={btn.primary + ' mt-auto'}>{timing === 'after' ? '끝나고 문 연 곳 보기' : '시작 전에 갈 곳 보기'}</button>
+        <BottomBar>
+          <button className={btn.primary}>{timing === 'after' ? '끝나고 문 연 곳 보기' : '시작 전에 갈 곳 보기'}</button>
+        </BottomBar>
       </form>
     </Page>
   );

@@ -41,7 +41,8 @@ export default function ModeChips({
   }
   const map = variant === 'map';
   return (
-    <div className="no-scrollbar flex gap-1.5 overflow-x-auto">
+    // 좁은 화면: 줄바꿈 없이 가로 스크롤 + 오른쪽 끝을 흐리게 (더 있다는 표시)
+    <div className="no-scrollbar flex gap-1.5 overflow-x-auto pr-8 [mask-image:linear-gradient(to_right,#000_calc(100%-36px),transparent)]">
       {MODE_ORDER.map((m) => (
         <button
           key={m}
