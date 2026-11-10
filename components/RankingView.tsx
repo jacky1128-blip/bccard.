@@ -1,7 +1,7 @@
 'use client';
 // A1 결제 순위 본문: 상황 탭 + 필터 + 카드 목록 + 같이 정하기 안내
 // 탭을 누르면 제목·설명·기준·목록·안내 박스가 함께 바뀜
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { Mode } from '@/types/group';
@@ -43,6 +43,16 @@ export default function RankingView({
   const m = MODES[mode];
   const stores = storesByMode[mode];
   const place = fixedPlace ?? placeLabel ?? m.place;
+
+  // 다른 화면에 갔다가 돌아오면(Next 가 이전 화면 상태를 기억해 둠) 필터를 기본값으로 — "지금 영업중인 가게"가 다시 켜진 채로
+  // (같은 화면 안에서 고른 필터는 그대로. 화면이 다시 보일 때만 effect 가 실행됨)
+  useEffect(() => {
+    queueMicrotask(() => {
+      setF(DEFAULT_FILTER);
+      setMore(false);
+      setShowClosed(false);
+    });
+  }, []);
 
   const changeMode = (x: Mode) => {
     setMode(x);
