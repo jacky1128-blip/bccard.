@@ -36,6 +36,7 @@ export default function CreateForm({
   const [headcount, setHeadcount] = useState(MODES[initialMode].defaultHeadcount);
   const [title, setTitle] = useState('');
   const [memo, setMemo] = useState('');
+  const [more, setMore] = useState(false);
   const m = MODES[mode];
   // 모임 이름을 안 정하면 "성수역 회식·모임"처럼 장소 + 상황으로
   const defaultTitle = `${place.trim() || '우리'} ${m.label}`;
@@ -152,19 +153,24 @@ export default function CreateForm({
           <span className={t.desc}>{createRule(headcount, mid)}</span>
         </Section>
 
-        <details className="group flex flex-col gap-2 rounded-[14px] bg-fill p-4">
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-2">
+        {/* <details> 는 Safari 가 접힌 상태의 미리보기를 숨기고 여백만 남겨서, 직접 여닫음 */}
+        <div className="flex flex-col gap-3 rounded-[14px] bg-fill p-4">
+          <div className="flex items-center justify-between gap-2">
             <span className={t.sectionTitle}>지금 설정 그대로 시작할까요?</span>
-            <span className={`shrink-0 ${btn.textLink}`}>추가 설정하기</span>
-          </summary>
-          <div className="mt-2 text-[13px] leading-[1.7] text-sub group-open:hidden">
-            모임 이름 · {title || defaultTitle}
-            <br />
-            투표 마감 · {m.deadline} (상황별 자동)
-            <br />
-            한 줄 메모 · {memo || '없음'}
+            <button type="button" aria-expanded={more} onClick={() => setMore((v) => !v)} className={`shrink-0 ${btn.textLink}`}>
+              {more ? '접기' : '추가 설정하기'}
+            </button>
           </div>
-          <div className="mt-3 hidden flex-col gap-3 group-open:flex">
+          {!more && (
+            <div className="text-[13px] leading-[1.7] text-sub">
+              모임 이름 · {title || defaultTitle}
+              <br />
+              투표 마감 · {m.deadline} (상황별 자동)
+              <br />
+              한 줄 메모 · {memo || '없음'}
+            </div>
+          )}
+          <div className={`${more ? 'flex' : 'hidden'} flex-col gap-3`}>
             <label className="flex flex-col gap-1 text-[13px] text-sub">
               모임 이름
               <input className={btn.field} value={title} onChange={(e) => setTitle(e.target.value)} placeholder={defaultTitle} />
@@ -175,7 +181,7 @@ export default function CreateForm({
               <input className={btn.field} value={memo} onChange={(e) => setMemo(e.target.value)} placeholder="없음" maxLength={40} />
             </label>
           </div>
-        </details>
+        </div>
         {/* 모바일: 화면 아래 고정 / 태블릿·PC: 폼 바로 아래 */}
         <BottomBar>
           <div className="flex flex-col gap-2">
