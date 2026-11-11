@@ -7,7 +7,7 @@ import type { GroupState, GroupStatus, Mode } from '@/types/group';
 import { sql, tx, type Query } from './db';
 import { getCandidates } from './stores';
 import { MODES, toMode } from './modes';
-import { voteThreshold } from './rules';
+import { MAX_HEADCOUNT, voteThreshold } from './rules';
 import { dayOfDate, toMinutes } from './time';
 import { toView } from './view';
 import { CANT_RULES } from './recommend';
@@ -76,7 +76,7 @@ export async function createGroup(body: Record<string, unknown>) {
   if (!place) throw new GroupError(400, '장소를 넣어 주세요');
   const date = /^\d{4}-\d{2}-\d{2}$/.test(String(body.date ?? '')) ? String(body.date) : null;
   const time = toMinutes(String(body.time ?? '')) != null ? cleanText(body.time, 5) : null;
-  const headcount = Math.max(2, Math.min(12, Number(body.headcount) || MODES[mode].defaultHeadcount));
+  const headcount = Math.max(2, Math.min(MAX_HEADCOUNT, Number(body.headcount) || MODES[mode].defaultHeadcount));
   const title = cleanText(body.title, 40) || MODES[mode].event;
   const when = formatWhen(date, time);
   const found = await findCandidates({ mode, place, date, time, headcount, when });

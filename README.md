@@ -10,7 +10,7 @@ BC카드 eat.pl(잇플) AI 서비스 수익화 챌린지 참가작.
    - **키 없이도** 잇플 실데이터·장소 검색·지도 핀·추천 규칙·경기 일정까지 동작 (k-skill 프록시 경유)
 3. 기능을 더 켜려면 `.env.local`에 키 입력 후 서버 재시작 (`.env.example` 참고, 무엇이 켜지는지는 `docs/TODO.md` 1-1)
    - Supabase(`SUPABASE_DB_URL`): 모임 저장 · Anthropic: AI 추천 이유 · 네이버: 실제 지도 · 카카오: 카카오톡 공유 · GA4: 이벤트 수집
-4. 새 Supabase 프로젝트를 쓰면 SQL Editor에서 `supabase/migrations/0001_init.sql` 실행 (지금 팀 프로젝트는 2026-11-09에 실행 완료)
+4. 새 Supabase 프로젝트를 쓰면 SQL Editor에서 `supabase/migrations/` 의 SQL을 번호 순서대로 실행 (지금 팀 프로젝트: 0001 2026-11-09, 0002 2026-11-11 실행 완료)
 
 ## 구조 요약
 - `app/` 화면(페이지)과 백엔드(API 라우트)를 같이 둔 Next.js App Router

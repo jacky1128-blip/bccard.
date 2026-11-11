@@ -8,6 +8,14 @@ import { buildTags, fanLabel, isAllDay, likelyOpenAt, UNSURE_CLOSE, UNSURE_OPEN 
 // 한 끼 서비스라 식사가 아닌 업종은 뺌
 const NOT_MEAL = /카페|커피|디저트|베이커리|제과|빵|아이스크림|빙수|음료|주스|차 ?전문|떡집|편의점|도넛|와플|케이크|마카롱/;
 
+// 회식·모임: 여럿이 앉아 오래 먹는 업종은 앞으로, 혼자 빨리 먹는 업종은 뺌 (업종 이름만으로 판단)
+// 잇플 '회식 적합'(empyVsitYn)은 동네당 몇 곳뿐이고 분식집에도 붙어 있어서 업종 규칙과 같이 씀
+// '백반/한정식'·'찜/탕/찌개'(국밥·순두부 포함)·'기타한식'은 섞여 있어서 앞으로 올리지도 빼지도 않음
+export const PARTY_FIT = /고기구이|곱창|막창|족발|보쌈|전골|샤브|횟집|해산물|해물|중식|이자카야|호프|주점|바\(bar\)|뷔페|이탈리아|스시|초밥|오리|양고기|닭갈비|치킨|정육식당/;
+export const PARTY_NO = /버거|피자|김밥|분식|떡볶이|샌드위치|토스트|도시락|죽|샐러드|브런치|돈가스|돈까스|라멘|국수|면\/만두|마라탕|식품소매|패스트푸드/;
+const partyFit = (it: EatplItem) => PARTY_FIT.test(it.merTpbuzNm ?? '');
+const partyNo = (it: EatplItem) => PARTY_NO.test(it.merTpbuzNm ?? '');
+
 // 못 먹는 거 → 빼는 업종 (업종 이름만으로 판단, 메뉴 정보는 없음)
 export const CANT_RULES: Record<string, RegExp> = {
   '매운 거': /마라|떡볶이|낙지|쭈꾸미|주꾸미|짬뽕|닭발|불닭|매운|훠궈|찜닭|김치찜|아구찜|아귀찜/,
@@ -61,7 +69,10 @@ function score(it: EatplItem, idx: number, o: PickOptions) {
   const walk = it._walkMin ?? 10;
   if (walk > 10) s += Math.ceil((walk - 10) / 5) * 3;
   if (isBusyAt(it, o.at, o.day)) s += 5;
-  if (o.mode === 'party' && it.empyVsitYn) s -= 8;
+  if (o.mode === 'party') {
+    if (partyFit(it)) s -= 10;
+    if (it.empyVsitYn && !partyNo(it)) s -= 8;
+  }
   if ((o.mode === 'travel' || o.mode === 'meal') && it.loclPrsnPpltYn) s -= 6;
   // 오늘 밥 한 끼 · 낮 시간은 술집을 뒤로 (다른 후보가 없으면 그래도 나옴)
   if ((o.mode === 'meal' || (o.at != null && o.at < 17 * 60 && o.mode !== 'party')) && CANT_RULES['술 못 마심'].test(it.merTpbuzNm ?? '')) s += 10;
@@ -70,11 +81,15 @@ function score(it: EatplItem, idx: number, o: PickOptions) {
 }
 
 export function pickCandidates(items: EatplItem[], o: PickOptions): EatplItem[] {
-  return items
+  const limit = o.limit ?? 3;
+  const ok = items
     .map((it, idx) => ({ it, idx }))
     .filter(({ it }) => passes(it, o))
-    .sort((a, b) => score(a.it, a.idx, o) - score(b.it, b.idx, o))
-    .slice(0, o.limit ?? 3)
+    .sort((a, b) => score(a.it, a.idx, o) - score(b.it, b.idx, o));
+  // 회식·모임은 버거·김밥 같은 곳을 빼되, 그것밖에 없으면 모자란 만큼만 채움
+  const picked = o.mode === 'party' ? [...ok.filter((x) => !partyNo(x.it)), ...ok.filter((x) => partyNo(x.it))] : ok;
+  return picked
+    .slice(0, limit)
     .map(({ it }) => ({ ...it, _tags: buildTags(it, { ...o, peers: items }) }));
 }
 
@@ -113,7 +128,8 @@ export function rankForMode(items: EatplItem[], mode: Mode, o: { at?: number; da
   const base = items.filter((it) => !NOT_MEAL.test(it.merTpbuzNm ?? ''));
   const sorted = [...base].sort((a, b) => {
     const boost = (it: EatplItem) =>
-      (mode === 'party' && it.empyVsitYn ? -1 : 0) +
+      // 회식·모임: 회식 업종 > 잇플 회식 적합 > 그 밖 > 버거·김밥 같은 곳
+      (mode === 'party' ? (partyNo(it) ? 3 : (partyFit(it) ? -2 : 0) + (it.empyVsitYn ? -1 : 0)) : 0) +
       ((mode === 'travel' || mode === 'meal') && it.loclPrsnPpltYn ? -1 : 0) +
       (mode === 'event' && !isAllDay(it.srtTime, it.endTime) && (toMinutes(it.endTime) ?? 0) <= (toMinutes(it.srtTime) ?? 0) ? -1 : 0) +
       // 오늘 밥 한 끼 · 여행은 술집·주류판매점을 뒤로 (식사 목록이라서)

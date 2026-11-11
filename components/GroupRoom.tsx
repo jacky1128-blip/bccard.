@@ -2,7 +2,7 @@
 // 모임 방: 참여(B2) → 대기(B3) → 투표(B4) → 확정(B5)
 // live  : DB(Supabase) 연결됨 → /api/groups/[id] 로 상태를 주고받고 4초마다 새로고침
 // !live : 키가 없을 때 화면 상태로만 흉내 내는 데모 (친구 입장 버튼 제공)
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import type { GroupState } from '@/types/group';
 import { MODES } from '@/lib/modes';
@@ -135,6 +135,15 @@ export default function GroupRoom({ initial, live }: { initial: GroupState; live
   const [cant, setCant] = useState<string[]>([]);
   const [origin, setOrigin] = useState('');
   const meeting = useMeeting(g);
+  // 중간에서 만나요: 출발역이 모여 중간역이 바뀌면 그 역 기준으로 후보를 자동으로 다시 불러옴 (방장 화면에서, 투표 전까지)
+  const midTarget = live && g.mid && g.status === 'waiting' && g.me.isHost && meeting.best ? stationLabel(meeting.best.station.name) : null;
+  const triedMid = useRef<string | null>(null);
+  useEffect(() => {
+    if (!midTarget || midTarget === g.place || triedMid.current === midTarget) return;
+    triedMid.current = midTarget; // 같은 역으로 두 번 부르지 않음 (실패하면 아래 버튼으로 다시)
+    actions.changePlace(midTarget);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [midTarget, g.place]);
   const joined = g.participants.map((p) => p.name);
   const left = Math.max(0, g.need - joined.length);
   const step: Step = !g.me.joined ? 'join' : g.status === 'waiting' ? 'lock' : g.status === 'voting' ? 'vote' : 'done';
@@ -237,7 +246,7 @@ export default function GroupRoom({ initial, live }: { initial: GroupState; live
                 </span>
                 {g.me.isHost && stationLabel(best.station.name) !== g.place && (
                   <button type="button" disabled={busy} onClick={() => actions.changePlace(stationLabel(best.station.name))} className={btn.mdPrimary}>
-                    {stationLabel(best.station.name)}으로 후보 다시 찾기
+                    {busy ? `${stationLabel(best.station.name)} 근처 후보 불러오는 중…` : `${stationLabel(best.station.name)}으로 후보 다시 찾기`}
                   </button>
                 )}
                 <span className="text-[11px] text-sub">{meeting.real ? '실제 대중교통 시간이에요' : '직선거리로 어림잡은 시간이에요'}</span>

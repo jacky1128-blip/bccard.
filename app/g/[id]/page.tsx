@@ -8,7 +8,7 @@ import { MODES, toMode } from '@/lib/modes';
 import { getCandidates } from '@/lib/stores';
 import { formatWhen, getGroupPublic } from '@/lib/groups';
 import { dbConfigured } from '@/lib/db';
-import { voteThreshold } from '@/lib/rules';
+import { MAX_HEADCOUNT, voteThreshold } from '@/lib/rules';
 import { dayOfDate, toMinutes } from '@/lib/time';
 import { q, type SP } from '@/lib/params';
 
@@ -25,7 +25,7 @@ async function Room({ params, searchParams }: { params: Promise<{ id: string }>;
   // 데모: 주소에 담긴 값으로 모임 흉내
   const mode = toMode(q(sp, 'mode'), 'party');
   const m = MODES[mode];
-  const headcount = Math.max(2, Math.min(12, Number(q(sp, 'headcount')) || m.defaultHeadcount));
+  const headcount = Math.max(2, Math.min(MAX_HEADCOUNT, Number(q(sp, 'headcount')) || m.defaultHeadcount));
   const date = q(sp, 'date');
   const time = q(sp, 'time');
   const when = formatWhen(date, time) || m.when;

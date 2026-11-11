@@ -6,6 +6,7 @@ import type { Mode } from '@/types/group';
 import { MODES } from '@/lib/modes';
 import { track } from '@/lib/analytics';
 import { getAnonToken } from '@/lib/anon';
+import { MAX_HEADCOUNT } from '@/lib/rules';
 import ModeChips from './ModeChips';
 import PickerInput from './PickerInput';
 import TimeSelect from './TimeSelect';
@@ -147,7 +148,7 @@ export default function CreateForm({
             <div className="flex items-center gap-2.5">
               <button type="button" aria-label="인원 줄이기" onClick={() => setHeadcount(Math.max(2, headcount - 1))} className="size-9 rounded-full border border-line bg-white text-lg">−</button>
               <span className={`w-8 text-center text-[15px] font-bold ${t.num}`}>{headcount}명</span>
-              <button type="button" aria-label="인원 늘리기" onClick={() => setHeadcount(Math.min(12, headcount + 1))} className="size-9 rounded-full border border-line bg-white text-lg">+</button>
+              <button type="button" aria-label="인원 늘리기" onClick={() => setHeadcount(Math.min(MAX_HEADCOUNT, headcount + 1))} className="size-9 rounded-full border border-line bg-white text-lg">+</button>
             </div>
           </div>
           <span className={t.desc}>{createRule(headcount, mid)}</span>
