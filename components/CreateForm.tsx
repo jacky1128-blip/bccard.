@@ -147,7 +147,7 @@ export default function CreateForm({
             <span className="text-[15px] font-bold text-primary-ink">2명 이상</span>
             <div className="flex items-center gap-2.5">
               <button type="button" aria-label="인원 줄이기" onClick={() => setHeadcount(Math.max(2, headcount - 1))} className="size-9 rounded-full border border-line bg-white text-lg">−</button>
-              <span className={`w-8 text-center text-[15px] font-bold ${t.num}`}>{headcount}명</span>
+              <span className={`w-11 whitespace-nowrap text-center text-[15px] font-bold ${t.num}`}>{headcount}명</span>
               <button type="button" aria-label="인원 늘리기" onClick={() => setHeadcount(Math.min(MAX_HEADCOUNT, headcount + 1))} className="size-9 rounded-full border border-line bg-white text-lg">+</button>
             </div>
           </div>
