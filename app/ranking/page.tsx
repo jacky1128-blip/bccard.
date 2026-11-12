@@ -17,9 +17,9 @@ async function Content({ searchParams }: { searchParams: Promise<SP> }) {
   const mode = toMode(q(sp, 'mode'));
   const place = q(sp, 'place');
   const { minutes, dow } = kstNow();
-  const r = await getStoresByMode(place ?? DEFAULT_PLACE, { at: minutes, day: dow, limit: 10 });
+  const r = await getStoresByMode(place ?? DEFAULT_PLACE, { at: minutes, day: dow, limit: 10, quiet: true });
   const nearby = r.center ? await nearbyStations(r.center, r.label) : [];
-  return <RankingView initialMode={mode} storesByMode={r.storesByMode} fixedPlace={place ? r.label : undefined} placeLabel={r.label} nearby={nearby} center={r.center} live={r.live} notFound={r.notFound} />;
+  return <RankingView initialMode={mode} storesByMode={r.storesByMode} quietByMode={r.quietByMode}fixedPlace={place ? r.label : undefined} placeLabel={r.label} nearby={nearby} center={r.center} live={r.live} notFound={r.notFound} />;
 }
 
 export default function Page({ searchParams }: PageProps<'/ranking'>) {

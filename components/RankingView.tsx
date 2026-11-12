@@ -21,6 +21,7 @@ import { BrandHeader, PageTitle, btn, t } from './ui';
 export default function RankingView({
   initialMode,
   storesByMode,
+  quietByMode,
   fixedPlace,
   placeLabel,
   nearby = [],
@@ -30,6 +31,7 @@ export default function RankingView({
 }: {
   initialMode: Mode;
   storesByMode: Record<Mode, StoreView[]>;
+  quietByMode?: Record<Mode, StoreView[]>; // 덜 붐비는 가게 필터용 예비 후보 (상위 10곳 밖)
   fixedPlace?: string; // /r/[place] · ?place= 처럼 장소를 고른 경우
   placeLabel?: string; // 실제로 조회한 장소 이름
   nearby?: string[];   // 근처 다른 역
@@ -70,19 +72,31 @@ export default function RankingView({
     syncModeToUrl(x);
   };
 
-  const cats = useMemo(() => [...new Set(stores.map((s) => s.cat))], [stores]);
+  // 덜 붐비는 가게를 켜면 상위 10곳 밖 예비 후보까지 넣고 거름 (상위 10곳이 다 지금 붐비는 동네 대비)
+  const source = useMemo(() => {
+    const extra = f.lessBusy ? (quietByMode?.[mode] ?? []) : [];
+    const seen = new Set(stores.map((s) => s.key));
+    return [...stores, ...extra.filter((s) => !seen.has(s.key))];
+  }, [stores, quietByMode, mode, f.lessBusy]);
+  const cats = useMemo(() => [...new Set(source.map((s) => s.cat))], [source]);
+  const nowBucket = now == null ? undefined : timeBucket(now);
   // 영업 중 조건만 뺀 나머지 필터 결과
   const base = useMemo(
     () =>
-      stores.filter(
-        (s) =>
-          (!f.cat || s.cat === f.cat) &&
-          (!f.near || (s.walkMin ?? 99) <= 10) &&
-          // 덜 붐비는 가게: 잇플 '가장 붐비는 시간대'가 지금 시간대가 아닌 곳
-          (!f.lessBusy || now == null || !s.busyTime || s.busyTime !== timeBucket(now)),
-      ),
-    [stores, f, now],
+      source
+        .filter(
+          (s) =>
+            (!f.cat || s.cat === f.cat) &&
+            (!f.near || (s.walkMin ?? 99) <= 10) &&
+            // 덜 붐비는 가게: 잇플 '가장 붐비는 시간대'가 지금 시간대가 아닌 곳
+            (!f.lessBusy || !nowBucket || !s.busyTime || s.busyTime !== nowBucket),
+        )
+        .slice(0, 10),
+    [source, f, nowBucket],
   );
+  // 덜 붐비는 가게 때문에 다 빠졌는지 (빈 화면 안내용)
+  const allBusyNow =
+    f.lessBusy && !!nowBucket && source.some((s) => (!f.cat || s.cat === f.cat) && (!f.near || (s.walkMin ?? 99) <= 10) && s.busyTime === nowBucket);
   const isOpen = (s: StoreView) => now == null || likelyOpenAt(s.open, s.close, now) !== false;
   const list = f.openNow ? base.filter(isOpen) : base;
   // 영업 중 필터를 켜면 문 닫은 곳은 목록에서 빼고, 보고 싶을 때만 펼침 (섞여 보이지 않게)
@@ -151,18 +165,33 @@ export default function RankingView({
           <Link href={`${m.boxHref}${m.boxHref.includes('?') ? `&place=${encodeURIComponent(place)}` : ''}`} className={btn.primary}>{m.boxBtn}</Link>
         </div>
       </div>
-      <span className={`-mt-2 ${t.desc}`}>최근 결제 금액 순으로 최대 10곳이에요.</span>
+      <span className={`-mt-2 ${t.desc}`}>
+        {f.lessBusy && nowBucket
+          ? `지금 시간대(${nowBucket})에 결제가 가장 몰리는 곳은 빼고, 결제 금액 순으로 최대 10곳이에요.`
+          : '최근 결제 금액 순으로 최대 10곳이에요.'}
+      </span>
 
       <div className="flex flex-col gap-2.5 md:grid md:grid-cols-2 md:gap-3 lg:flex">
         {shown.length === 0 && (
           <p className={`rounded-2xl bg-fill py-8 text-center md:col-span-2 ${t.desc}`}>
-            {closed.length ? '지금 문 연 곳이 없어요' : '조건에 맞는 곳이 없어요'}
+            {closed.length ? (
+              '지금 문 연 곳이 없어요'
+            ) : allBusyNow ? (
+              <>
+                이 동네는 지금({nowBucket})이 대부분 가게의 가장 붐비는 시간이에요
+                <br />
+                최근 1개월 결제가 가장 몰리는 시간대 기준이에요
+              </>
+            ) : (
+              '조건에 맞는 곳이 없어요'
+            )}
           </p>
         )}
         {shown.map((s) => card(s))}
         {!more && list.length > 5 && (
           <button type="button" onClick={() => setMore(true)} className={`${btn.outline} md:col-span-2`}>
-            {list.length > 6 ? `6~${list.length}위` : '6위'} 더 보기
+            {/* 덜 붐비는 가게일 때는 순위가 띄엄띄엄이라 곳 수로 */}
+            {f.lessBusy ? `${list.length - 5}곳` : list.length > 6 ? `6~${list.length}위` : '6위'} 더 보기
           </button>
         )}
         {closed.length > 0 && !showClosed && (
