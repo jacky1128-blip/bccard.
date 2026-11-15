@@ -108,7 +108,7 @@ export default function EventForm() {
                         game?.id === g.id ? 'border-[1.5px] border-primary bg-white' : 'border border-line bg-white'
                       }`}
                     >
-                      <span className="text-[14px] font-bold">{g.away} vs {g.home}</span>
+                      <span className="text-[13px] font-bold">{g.away} vs {g.home}</span>
                       <span className={`${t.desc} ${t.num}`}>{g.league} · {g.venue} · {g.start}</span>
                     </button>
                   ))}
@@ -131,7 +131,7 @@ export default function EventForm() {
         <Section title={`3. 장소와 ${timing === 'after' ? '끝나는' : '시작'} 시간 확인`}>
           <label className="flex h-12 items-center gap-2 rounded-xl border border-line-2 px-3.5 focus-within:border-primary">
             <PinIcon />
-            <input aria-label="공연장·경기장" className="flex-1 text-[15px] outline-none" value={venue} onChange={(e) => setVenue(e.target.value)} required />
+            <input aria-label="공연장·경기장" className="flex-1 text-[14px] outline-none" value={venue} onChange={(e) => setVenue(e.target.value)} required />
           </label>
           {!game && (
             <div className="flex flex-wrap gap-1.5">

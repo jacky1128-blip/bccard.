@@ -169,7 +169,7 @@ export default function HomeView({
           className="flex h-12 min-w-0 flex-1 items-center gap-2 rounded-[14px] bg-white px-3.5 no-underline shadow-[0_2px_10px_rgba(0,0,0,0.10)] md:border md:border-line md:shadow-none"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B5F66" strokeWidth="2" strokeLinecap="round" aria-hidden="true" className="shrink-0"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
-          <span className="truncate text-sm text-sub">동네나 역 이름으로 검색해요</span>
+          <span className="truncate text-[13px] text-sub">동네나 역 이름으로 검색해요</span>
         </Link>
         <button type="button" aria-label="내 위치로 이동" onClick={locate} disabled={locating} className="flex h-12 w-14 shrink-0 flex-col items-center justify-center gap-0.5 rounded-[14px] bg-white shadow-[0_2px_10px_rgba(0,0,0,0.10)] md:border md:border-line md:shadow-none">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2F54EB" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /></svg>

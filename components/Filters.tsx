@@ -8,8 +8,8 @@ export type FilterValue = {
   cat: string;     // '' = 업종 전체
 };
 
-// 와이어프레임처럼 "지금 영업 중"이 켜진 채로 시작
-export const DEFAULT_FILTER: FilterValue = { openNow: true, lessBusy: false, near: false, cat: '' };
+// "전체"로 시작 (영업 중 필터는 눌러서 켬 · 사용자 피드백 2026-11-15)
+export const DEFAULT_FILTER: FilterValue = { openNow: false, lessBusy: false, near: false, cat: '' };
 
 const on = btn.chipDarkOn;
 const off = btn.pillOff;

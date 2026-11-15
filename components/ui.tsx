@@ -11,15 +11,15 @@ export const LOGO_BLUE = '#2E5E9F'; // 로고 마크 전용 색 (버튼 등 화�
  */
 export const t = {
   // 도현체
-  logo: 'font-display text-[18px] leading-none',
+  logo: 'font-display text-[17px] leading-none',
   // 작은 폰(359px 이하)만 조금 줄임 · 기본 모바일 크기는 그대로
-  pageTitle: 'font-display text-[28px] leading-[1.3] max-[359px]:text-[clamp(23px,7.6vw,27px)]',
-  headerTitle: 'font-display text-[22px] leading-[1.3] max-[359px]:text-[19px]', // 뒤로 가기 옆 화면 이름 (같이 정하기, 여행 등)
-  sectionTitle: 'font-display text-base leading-snug',
-  sheetTitle: 'font-display text-[19px] leading-snug max-[359px]:text-[17px]',  // 첫 화면 시트 제목, 파란 안내 박스 제목
+  pageTitle: 'font-display text-[26px] leading-[1.3] max-[359px]:text-[clamp(22px,7.2vw,25px)]',
+  headerTitle: 'font-display text-[20px] leading-[1.3] max-[359px]:text-[18px]', // 뒤로 가기 옆 화면 이름 (같이 정하기, 여행 등)
+  sectionTitle: 'font-display text-[15px] leading-snug',
+  sheetTitle: 'font-display text-[18px] leading-snug max-[359px]:text-[16px]',  // 첫 화면 시트 제목, 파란 안내 박스 제목
   // 긴 가게 이름은 2줄까지, 넘치면 …
-  storeLg: 'font-display text-[18px] leading-snug line-clamp-2 max-[359px]:text-[16px]',
-  storeSm: 'font-display text-[17px] leading-snug line-clamp-2 max-[359px]:text-[16px]',
+  storeLg: 'font-display text-[17px] leading-snug line-clamp-2 max-[359px]:text-[15px]',
+  storeSm: 'font-display text-[16px] leading-snug line-clamp-2 max-[359px]:text-[15px]',
   tag: 'font-display text-[13px]',
   aiLabel: 'font-display text-[13px] text-primary-ink',
   // Pretendard
@@ -31,14 +31,14 @@ export const t = {
   num: 'tabular-nums',
 };
 
-/* ---------- 버튼 (크기 4단계, 글씨는 모두 도현체 15px) ----------
+/* ---------- 버튼 (크기 4단계, 글씨는 모두 도현체 14px) ----------
  *  lg   56px · 화면 주요 버튼, 전체 너비 버튼
  *  md   48px · 카드 안 버튼, 공유, 선택 토글
  *  sm   36px · 줄 옆 작은 버튼
  *  chip 36px · 알약 모양 선택 칩
  * 새 버튼도 여기서 골라 쓰기 (높이·굵기 덮어쓰기 금지)
  */
-const LABEL = 'font-display text-[15px] leading-none no-underline transition disabled:opacity-40';
+const LABEL = 'font-display text-[14px] leading-none no-underline transition disabled:opacity-40';
 const LG = `flex h-14 w-full items-center justify-center rounded-2xl ${LABEL}`;
 const MD = `flex h-12 w-full items-center justify-center rounded-xl ${LABEL}`;
 // 36px 버튼·칩은 보이는 크기는 그대로, 누르는 영역만 위아래로 늘려 44px 확보
@@ -175,7 +175,7 @@ export function StatBoxes({ items }: { items: [string, string][] }) {
       {items.map(([k, v]) => (
         <div key={k} className="flex flex-col gap-0.5 rounded-xl bg-fill p-2.5">
           <span className="text-[11px] text-sub">{k}</span>
-          <span className={`text-sm font-bold ${t.num}`}>{v}</span>
+          <span className={`text-[13px] font-bold ${t.num}`}>{v}</span>
         </div>
       ))}
     </div>

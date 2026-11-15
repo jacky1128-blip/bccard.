@@ -39,7 +39,7 @@ function RankArt() {
           <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary text-[13px] font-bold text-white tabular-nums">{i + 1}</span>
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             <div className="flex items-baseline justify-between gap-2">
-              <span className="font-display text-[15px]">{name}</span>
+              <span className="font-display text-[14px]">{name}</span>
               <span className={t.meta}>{rank}</span>
             </div>
             <span className="h-1.5 rounded-full bg-primary-soft">
@@ -60,7 +60,7 @@ function ModeArt() {
           key={m}
           className={`flex items-center justify-between rounded-2xl px-4 py-3 ${i === 0 ? 'border-[1.5px] border-primary bg-primary-soft' : 'border border-line bg-white'}`}
         >
-          <span className={`font-display text-[15px] ${i === 0 ? 'text-primary-ink' : ''}`}>{MODES[m].label}</span>
+          <span className={`font-display text-[14px] ${i === 0 ? 'text-primary-ink' : ''}`}>{MODES[m].label}</span>
           <span className="text-[12px] text-sub">{MODES[m].homeTitle}</span>
         </div>
       ))}
@@ -82,7 +82,7 @@ function VoteArt() {
       </div>
       {opts.map(([name, n], i) => (
         <div key={name} className="flex items-center gap-2.5">
-          <span className="font-display w-24 shrink-0 text-[14px]">{name}</span>
+          <span className="font-display w-24 shrink-0 text-[13px]">{name}</span>
           <span className="flex flex-1 gap-1">
             {Array.from({ length: 7 }, (_, k) => (
               <span key={k} className={`h-5 flex-1 rounded ${k < n ? (i === 0 ? 'bg-primary' : 'bg-line-2') : 'bg-fill'}`} />
@@ -176,7 +176,7 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
             <div className="flex flex-col gap-2" aria-live="polite">
               <span className={t.kicker}>{s.kicker}</span>
               <h2 className={t.pageTitle}>{s.title}</h2>
-              <p className="text-[15px] leading-[1.6] text-sub">{s.desc}</p>
+              <p className="text-[14px] leading-[1.6] text-sub">{s.desc}</p>
             </div>
           </div>
         </div>

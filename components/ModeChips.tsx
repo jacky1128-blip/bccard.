@@ -31,7 +31,7 @@ export default function ModeChips({
             role="tab"
             aria-selected={m === value}
             onClick={() => onChange(m)}
-            className={`h-11 font-display text-[15px] ${m === value ? 'border-b-[3px] border-primary text-ink' : 'border-b border-line text-sub hover:text-ink'}`}
+            className={`h-11 font-display text-[14px] ${m === value ? 'border-b-[3px] border-primary text-ink' : 'border-b border-line text-sub hover:text-ink'}`}
           >
             {MODES[m].short}
           </button>

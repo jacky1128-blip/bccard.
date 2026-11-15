@@ -48,7 +48,7 @@ export default function ResultView({
           )}
         </>
       ) : (
-        <p className="rounded-2xl bg-fill py-10 text-center text-sm text-sub">{notFound ? '장소를 찾으면 그 시간에 문 연 곳을 보여드려요' : '그 시간에 문 연 곳이 없어요. 시간을 바꿔 보세요'}</p>
+        <p className="rounded-2xl bg-fill py-10 text-center text-[13px] text-sub">{notFound ? '장소를 찾으면 그 시간에 문 연 곳을 보여드려요' : '그 시간에 문 연 곳이 없어요. 시간을 바꿔 보세요'}</p>
       )}
       {/* 장소를 못 찾았으면 공유·초대 대신 다시 검색 */}
       {notFound ? (

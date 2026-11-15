@@ -54,7 +54,7 @@ export default function RankingView({
   const stores = storesByMode[mode];
   const place = fixedPlace ?? placeLabel ?? m.place;
 
-  // 다른 화면에 갔다가 돌아오면(Next 가 이전 화면 상태를 기억해 둠) 필터를 기본값으로 — "지금 영업중인 가게"가 다시 켜진 채로
+  // 다른 화면에 갔다가 돌아오면(Next 가 이전 화면 상태를 기억해 둠) 필터를 기본값("전체")으로
   // (같은 화면 안에서 고른 필터는 그대로. 화면이 다시 보일 때만 effect 가 실행됨)
   useEffect(() => {
     queueMicrotask(() => {

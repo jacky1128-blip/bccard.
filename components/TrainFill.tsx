@@ -53,7 +53,7 @@ export default function TrainFill({ defaultDate, onFill }: { defaultDate: string
           <span className={t.kicker}>예매한 열차로 채웠어요{train.demo && ' · 데모 시간'}</span>
           <button type="button" onClick={() => setOpen(true)} className={btn.textLink}>바꾸기</button>
         </div>
-        <span className={`text-[15px] font-bold ${t.num}`}>{train.type} {train.no} · {train.from} {train.depart} 출발</span>
+        <span className={`text-[14px] font-bold ${t.num}`}>{train.type} {train.no} · {train.from} {train.depart} 출발</span>
         <label className="flex items-center gap-2">
           <span className="shrink-0 text-[13px] font-bold">내릴 역</span>
           <select aria-label="내릴 역" value={train.to} onChange={(e) => getOff(e.target.value)} className={`${btn.field} h-10 min-w-0 flex-1 ${t.num}`}>
@@ -71,7 +71,7 @@ export default function TrainFill({ defaultDate, onFill }: { defaultDate: string
   if (!open) {
     return (
       <button type="button" onClick={() => setOpen(true)} className="flex flex-col items-start gap-0.5 rounded-[14px] border-[1.5px] border-dashed border-primary bg-primary-soft px-3.5 py-3 text-left">
-        <span className="font-display text-[15px] text-primary-ink">예매 정보로 도착 시간 채우기</span>
+        <span className="font-display text-[14px] text-primary-ink">예매 정보로 도착 시간 채우기</span>
         <span className={t.desc}>선택 · KTX·SRT 열차번호를 넣으면 코레일 시간표로 도착역과 시간이 들어가요 · 안 써도 아래에 직접 넣으면 돼요</span>
       </button>
     );

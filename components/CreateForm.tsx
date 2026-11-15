@@ -115,7 +115,7 @@ export default function CreateForm({
                     mid === v ? 'border-[1.5px] border-primary bg-primary-soft text-primary-ink' : 'border border-line bg-white text-ink'
                   }`}
                 >
-                  <span className="font-display text-[15px]">{label}</span>
+                  <span className="font-display text-[14px]">{label}</span>
                   <span className={t.desc}>{s}</span>
                 </button>
               ))}
@@ -144,11 +144,11 @@ export default function CreateForm({
 
         <Section title="3. 몇 명이서 함께 먹나요?">
           <div className="flex h-14 items-center justify-between rounded-xl border-[1.5px] border-primary bg-primary-soft pl-4 pr-2">
-            <span className="text-[15px] font-bold text-primary-ink">2명 이상</span>
+            <span className="text-[14px] font-bold text-primary-ink">2명 이상</span>
             <div className="flex items-center gap-2.5">
-              <button type="button" aria-label="인원 줄이기" onClick={() => setHeadcount(Math.max(2, headcount - 1))} className="size-9 rounded-full border border-line bg-white text-lg">−</button>
-              <span className={`w-11 whitespace-nowrap text-center text-[15px] font-bold ${t.num}`}>{headcount}명</span>
-              <button type="button" aria-label="인원 늘리기" onClick={() => setHeadcount(Math.min(MAX_HEADCOUNT, headcount + 1))} className="size-9 rounded-full border border-line bg-white text-lg">+</button>
+              <button type="button" aria-label="인원 줄이기" onClick={() => setHeadcount(Math.max(2, headcount - 1))} className="size-9 rounded-full border border-line bg-white text-[17px]">−</button>
+              <span className={`w-11 whitespace-nowrap text-center text-[14px] font-bold ${t.num}`}>{headcount}명</span>
+              <button type="button" aria-label="인원 늘리기" onClick={() => setHeadcount(Math.min(MAX_HEADCOUNT, headcount + 1))} className="size-9 rounded-full border border-line bg-white text-[17px]">+</button>
             </div>
           </div>
           <span className={t.desc}>{createRule(headcount, mid)}</span>

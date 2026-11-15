@@ -27,7 +27,7 @@ export function TopRow({ store, active = false, onSelect, onHover }: { store: St
         onSelect ? 'cursor-pointer' : ''
       } ${active ? 'border-transparent bg-primary-soft' : ''}`}
     >
-      <span className={`w-5 text-base font-black ${active ? 'text-primary-ink' : 'text-primary'} ${t.num}`}>{store.rank}</span>
+      <span className={`w-5 text-[15px] font-black ${active ? 'text-primary-ink' : 'text-primary'} ${t.num}`}>{store.rank}</span>
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className={t.storeSm}>{store.name}</span>
         <Meta parts={[store.cat, store.walk, `지역 상위 ${store.localRank ?? '[N]'}%`]} />

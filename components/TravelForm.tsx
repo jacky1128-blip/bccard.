@@ -46,7 +46,7 @@ export default function TravelForm() {
         <Section title="2. 어디에 몇 시에 도착해요?">
           <label className="flex h-12 items-center gap-2 rounded-xl border border-line-2 px-3.5 focus-within:border-primary">
             <PinIcon />
-            <input aria-label="도착역" className="flex-1 text-[15px] outline-none" value={place} onChange={(e) => setPlace(e.target.value)} required />
+            <input aria-label="도착역" className="flex-1 text-[14px] outline-none" value={place} onChange={(e) => setPlace(e.target.value)} required />
           </label>
           <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,auto)] gap-2">
             <PickerInput type="date" aria-label="도착 날짜" value={date} onChange={(e) => setDate(e.target.value)} />

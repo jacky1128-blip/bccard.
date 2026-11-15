@@ -51,7 +51,7 @@ export default function MidpointPicker({
       {origins.map((o, i) => (
         <div key={i} className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
-            <span className="w-14 shrink-0 font-display text-[15px]">{WHO(i)}</span>
+            <span className="w-14 shrink-0 font-display text-[14px]">{WHO(i)}</span>
             <input
               list="stations"
               aria-label={`${WHO(i)} 출발역`}

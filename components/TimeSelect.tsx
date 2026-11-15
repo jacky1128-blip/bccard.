@@ -70,7 +70,7 @@ function Wheel({ items, index, onChange, label }: { items: string[]; index: numb
           aria-selected={i === index}
           tabIndex={-1}
           onClick={() => pick(i)}
-          className={`flex w-full snap-center items-center justify-center tabular-nums transition-colors ${i === index ? 'text-[20px] font-bold text-ink' : 'text-[17px] text-sub'}`}
+          className={`flex w-full snap-center items-center justify-center tabular-nums transition-colors ${i === index ? 'text-[19px] font-bold text-ink' : 'text-[16px] text-sub'}`}
           style={{ height: ITEM }}
         >
           {x}
@@ -126,8 +126,8 @@ export default function TimeSelect({ value, onChange, placeholder = '시간 선�
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-2 flex items-center justify-between">
-              <span className="font-display text-[17px]">{ariaLabel}</span>
-              <span className="text-[15px] font-bold tabular-nums text-primary">{timeLabel(join(draft.ap, draft.hour, draft.minute))}</span>
+              <span className="font-display text-[16px]">{ariaLabel}</span>
+              <span className="text-[14px] font-bold tabular-nums text-primary">{timeLabel(join(draft.ap, draft.hour, draft.minute))}</span>
             </div>
             <div className="relative flex gap-1">
               {/* 가운데 선택 줄 */}

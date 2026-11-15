@@ -21,7 +21,7 @@ export default function SeatTable({ headcount, joined, mid }: { headcount: numbe
       // 도현체는 글자가 줄 높이 안에서 0.095em 위로 붙어 그려짐 → 위 여백 0.19em 으로 원 정중앙에 (실측)
       <span className={`flex ${size} items-center justify-center rounded-full bg-primary pt-[0.19em] font-display ${dense ? 'text-[clamp(11px,3.4cqw,15px)]' : 'text-[clamp(13px,4.3cqw,17px)]'} text-white`}>{name}</span>
     ) : idx === nextIdx ? (
-      <span className={`flex ${size} items-center justify-center rounded-full border-2 border-dashed border-primary bg-primary-soft ${dense ? 'text-sm' : 'text-lg'} font-bold text-primary-ink`}>+</span>
+      <span className={`flex ${size} items-center justify-center rounded-full border-2 border-dashed border-primary bg-primary-soft ${dense ? 'text-[13px]' : 'text-[17px]'} font-bold text-primary-ink`}>+</span>
     ) : (
       <span className={`${size} rounded-full border-[1.5px] border-dashed border-[#B8BCC2]`} />
     );
