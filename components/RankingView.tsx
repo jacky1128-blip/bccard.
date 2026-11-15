@@ -20,8 +20,8 @@ import { BrandHeader, PageTitle, btn, t } from './ui';
 
 export default function RankingView({
   initialMode,
+  placeQuery,
   storesByMode,
-  quietByMode,
   fixedPlace,
   placeLabel,
   nearby = [],
@@ -30,8 +30,8 @@ export default function RankingView({
   notFound = false,
 }: {
   initialMode: Mode;
+  placeQuery?: string; // 서버가 조회에 쓴 장소 입력 (업종별 순위를 따로 받을 때 그대로 넘김)
   storesByMode: Record<Mode, StoreView[]>;
-  quietByMode?: Record<Mode, StoreView[]>; // 덜 붐비는 가게 필터용 예비 후보 (상위 10곳 밖)
   fixedPlace?: string; // /r/[place] · ?place= 처럼 장소를 고른 경우
   placeLabel?: string; // 실제로 조회한 장소 이름
   nearby?: string[];   // 근처 다른 역
@@ -72,38 +72,61 @@ export default function RankingView({
     syncModeToUrl(x);
   };
 
-  // 덜 붐비는 가게를 켜면 상위 10곳 밖 예비 후보까지 넣고 거름 (상위 10곳이 다 지금 붐비는 동네 대비)
-  const source = useMemo(() => {
-    const extra = f.lessBusy ? (quietByMode?.[mode] ?? []) : [];
-    const seen = new Set(stores.map((s) => s.key));
-    return [...stores, ...extra.filter((s) => !seen.has(s.key))];
-  }, [stores, quietByMode, mode, f.lessBusy]);
-  const cats = useMemo(() => [...new Set(source.map((s) => s.cat))], [source]);
+  // 업종 목록: 동네 전체 목록에서 가게가 많은 업종부터 (업종을 골라도 목록은 그대로)
+  const cats = useMemo(() => {
+    const n = new Map<string, number>();
+    for (const s of stores) if (s.cat) n.set(s.cat, (n.get(s.cat) ?? 0) + 1);
+    return [...n.entries()].sort((a, b) => b[1] - a[1]).map(([c]) => c);
+  }, [stores]);
+
+  // 업종을 고르면 그 업종만의 순위를 따로 받아옴 (동네 전체 상위 100곳 안엔 한 업종이 몇 곳뿐이라)
+  // 한 번 받은 업종은 기억해 두고, 받는 동안·실패하면 동네 전체 목록에서 그 업종만 거른 걸 보여 줌
+  const [byCat, setByCat] = useState<Record<string, Record<Mode, StoreView[]> | 'loading' | 'error'>>({});
+  const catState = f.cat ? byCat[f.cat] : undefined;
+  useEffect(() => {
+    const cat = f.cat;
+    if (!cat || !live || !placeQuery || byCat[cat]) return;
+    queueMicrotask(() => setByCat((x) => ({ ...x, [cat]: 'loading' })));
+    fetch(`/api/ranking?${new URLSearchParams({ place: placeQuery, cat })}`)
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((d: { storesByMode: Record<Mode, StoreView[]> }) => setByCat((x) => ({ ...x, [cat]: d.storesByMode })))
+      .catch(() => setByCat((x) => ({ ...x, [cat]: 'error' })));
+  }, [f.cat, live, placeQuery, byCat]);
+  const catLoading = catState === 'loading';
+  // stores = 그 동네 식당 전체 (상황별 순서). 필터는 전체에서 거르고 위에서 10곳만 보여 줌
+  const source = catState && typeof catState === 'object' ? catState[mode] : stores;
   const nowBucket = now == null ? undefined : timeBucket(now);
-  // 영업 중 조건만 뺀 나머지 필터 결과
+  // 영업 중 조건만 뺀 나머지 필터 결과 (예비 후보까지 전부, 매출 순)
   const base = useMemo(
     () =>
-      source
-        .filter(
-          (s) =>
-            (!f.cat || s.cat === f.cat) &&
-            (!f.near || (s.walkMin ?? 99) <= 10) &&
-            // 덜 붐비는 가게: 잇플 '가장 붐비는 시간대'가 지금 시간대가 아닌 곳
-            (!f.lessBusy || !nowBucket || !s.busyTime || s.busyTime !== nowBucket),
-        )
-        .slice(0, 10),
+      source.filter(
+        (s) =>
+          (!f.cat || s.cat === f.cat) &&
+          (!f.near || (s.walkMin ?? 99) <= 10) &&
+          // 덜 붐비는 가게: 잇플 '가장 붐비는 시간대'가 지금 시간대가 아닌 곳
+          (!f.lessBusy || !nowBucket || !s.busyTime || s.busyTime !== nowBucket),
+      ),
     [source, f, nowBucket],
   );
   // 덜 붐비는 가게 때문에 다 빠졌는지 (빈 화면 안내용)
   const allBusyNow =
     f.lessBusy && !!nowBucket && source.some((s) => (!f.cat || s.cat === f.cat) && (!f.near || (s.walkMin ?? 99) <= 10) && s.busyTime === nowBucket);
   const isOpen = (s: StoreView) => now == null || likelyOpenAt(s.open, s.close, now) !== false;
-  const list = f.openNow ? base.filter(isOpen) : base;
+  // 조건에 맞는 곳을 다 거른 다음 위에서 10곳 → 빠진 자리는 아래 순위 가게가 올라와 채움 (5위가 빠지면 6위가 5위로)
+  // 순위 번호도 보이는 목록 기준으로 1부터 다시 매김 (지도 핀 번호도 같은 값)
+  const list = (f.openNow ? base.filter(isOpen) : base).slice(0, 10).map((s, i) => ({ ...s, rank: i + 1 }));
   // 영업 중 필터를 켜면 문 닫은 곳은 목록에서 빼고, 보고 싶을 때만 펼침 (섞여 보이지 않게)
-  const closed = f.openNow ? base.filter((s) => !isOpen(s)) : [];
+  // 원래 상위 10곳 안에 있었는데 문 닫아서 빠진 곳만. 지도 핀이 겹치지 않게 번호는 목록 다음부터
+  const closed = f.openNow
+    ? base
+        .slice(0, 10)
+        .filter((s) => !isOpen(s))
+        .map((s, i) => ({ ...s, rank: list.length + i + 1 }))
+    : [];
   const shown = more ? list : list.slice(0, 5);
 
   const active = hovered ?? picked;
+  // 문 닫은 곳(dim)은 순위에서 빠졌으니 번호 없이
   const card = (s: StoreView, highlight?: string, dim = false) => (
     <div
       key={s.key}
@@ -112,7 +135,7 @@ export default function RankingView({
       onMouseLeave={() => setHovered(null)}
       className={`rounded-2xl transition-shadow ${active === s.key ? 'shadow-[0_0_0_2px_var(--primary)]' : ''} ${dim ? 'opacity-60' : ''}`}
     >
-      <StoreCard store={s} showRank highlight={highlight} />
+      <StoreCard store={s} showRank={!dim} highlight={highlight} />
     </div>
   );
   const pickPin = (key: string | null) => {
@@ -166,12 +189,13 @@ export default function RankingView({
         </div>
       </div>
       <span className={`-mt-2 ${t.desc}`}>
+        {f.cat ? `${f.cat} 중 ` : ''}
         {f.lessBusy && nowBucket
           ? `지금 시간대(${nowBucket})에 결제가 가장 몰리는 곳은 빼고, 결제 금액 순으로 최대 10곳이에요.`
           : '최근 결제 금액 순으로 최대 10곳이에요.'}
       </span>
 
-      <div className="flex flex-col gap-2.5 md:grid md:grid-cols-2 md:gap-3 lg:flex">
+      <div aria-busy={catLoading} className={`flex flex-col gap-2.5 transition-opacity md:grid md:grid-cols-2 md:gap-3 lg:flex ${catLoading ? 'opacity-50' : ''}`}>
         {shown.length === 0 && (
           <p className={`rounded-2xl bg-fill py-8 text-center md:col-span-2 ${t.desc}`}>
             {closed.length ? (
@@ -190,8 +214,7 @@ export default function RankingView({
         {shown.map((s) => card(s))}
         {!more && list.length > 5 && (
           <button type="button" onClick={() => setMore(true)} className={`${btn.outline} md:col-span-2`}>
-            {/* 덜 붐비는 가게일 때는 순위가 띄엄띄엄이라 곳 수로 */}
-            {f.lessBusy ? `${list.length - 5}곳` : list.length > 6 ? `6~${list.length}위` : '6위'} 더 보기
+            {list.length > 6 ? `6~${list.length}위` : '6위'} 더 보기
           </button>
         )}
         {closed.length > 0 && !showClosed && (

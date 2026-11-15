@@ -7,13 +7,13 @@ import type { EatplItem } from '@/types/eatpl';
 import type { Mode } from '@/types/group';
 import { distanceKm, walkMinutes, type LatLng } from './geo';
 import { searchEatpl } from './eatpl';
+import { dropFranchises } from './franchise';
 import { cleanPlace, isCoord, resolvePlace, type Place } from './places';
 import { pickCandidates, rankForMode, ruleReason, type PickOptions } from './recommend';
 import { writeReasons } from './llm';
 import { MODE_ORDER } from './modes';
 import { mockItems } from './mock';
 import { likelyOpenAt, toViews, type StoreView } from './view';
-import { timeBucket } from './time';
 
 
 const BASE = (process.env.KSKILL_PROXY_BASE_URL || 'https://k-skill-proxy.nomadamas.org').replace(/\/+$/, '');
@@ -33,14 +33,16 @@ export type StoresResult = {
 class PlaceNotFound extends Error {}
 
 // 장소 → 좌표 + 그 동네 잇플 결과(도보 분 포함)
-async function loadArea(placeInput: string): Promise<{ place: Place; items: EatplItem[] }> {
+// genre(업종)를 주면 그 업종만 따로 매출 상위 100곳 (동네 전체 100곳 안에는 한 업종이 몇 곳뿐이라 업종별 순위가 안 나옴)
+async function loadArea(placeInput: string, genre?: string): Promise<{ place: Place; items: EatplItem[] }> {
   const place = await resolvePlace(placeInput);
   if (!place) throw new PlaceNotFound(`장소를 찾지 못했어요: ${placeInput}`);
-  const { items } = await searchEatpl({ location: place.region });
+  const { items } = await searchEatpl({ location: place.region, genre });
   const center = { lat: place.lat, lng: place.lng };
   return {
     place,
-    items: items.map((it) =>
+    // 프랜차이즈는 뺌 (동네가 작아 남는 게 적으면 뒤에 붙여서 채움 · lib/franchise)
+    items: dropFranchises(items).map((it) =>
       it._lat != null && it._lng != null ? { ...it, _walkMin: walkMinutes(distanceKm(center, { lat: it._lat, lng: it._lng })) } : it,
     ),
   };
@@ -98,29 +100,22 @@ export async function withAiReasons(r: StoresResult, q: Pick<CandidateQuery, 'mo
 
 export type ByModeResult = Omit<StoresResult, 'stores'> & {
   storesByMode: Record<Mode, StoreView[]>;
-  // '덜 붐비는 가게' 필터용 예비 후보: 상위 limit 곳 밖에서, 가장 붐비는 시간대가 지금이 아닌 곳 (매출 순, 최대 limit 곳)
-  // 오피스 상권(예: 상암동)은 상위 가게가 거의 다 점심에 가장 붐벼서, 상위 10곳만 거르면 남는 곳이 없음
-  quietByMode?: Record<Mode, StoreView[]>;
 };
 
-// 첫 화면·순위 화면: 잇플 한 번 호출로 상황 4개 목록 (각 최대 10곳)
-export async function getStoresByMode(placeInput: string, o: { at?: number; day?: string; limit?: number; quiet?: boolean } = {}): Promise<ByModeResult> {
+// 첫 화면·순위 화면: 잇플 한 번 호출로 상황 4개 목록 (각 최대 limit 곳)
+// 순위 화면은 limit 없이(full) 그 동네 식당 전체를 상황별 순서로 받음 → 화면에서 업종·영업 중·거리·덜 붐비는 곳으로 거른 뒤 위에서 10곳
+// (그래야 '고기구이'를 고르면 상위 10곳 안의 고기구이가 아니라 고기구이 1~10위가 나오고, 빠진 자리는 아래 순위가 채움)
+// genre 를 주면 그 업종만의 순위 (순위 화면에서 업종을 고를 때 · /api/ranking)
+export async function getStoresByMode(placeInput: string, o: { at?: number; day?: string; limit?: number; full?: boolean; genre?: string } = {}): Promise<ByModeResult> {
   const label = cleanPlace(placeInput);
   try {
-    const { place, items: all } = await loadArea(placeInput);
+    const { place, items: all } = await loadArea(placeInput, o.genre);
     // 법정동이 넓으면(예: 신림동) 30~40분 거리 가게가 섞임 → "내 주변"답게 도보 20분 안, 모자라면 30분 안, 그래도 모자라면 전체
     const within = (min: number) => all.filter((it) => it._walkMin == null || it._walkMin <= min);
     const items = [20, 30].map(within).find((xs) => xs.length >= 10) ?? all;
-    const limit = o.limit ?? 10;
-    const ranked = Object.fromEntries(MODE_ORDER.map((m) => [m, toViews(rankForMode(items, m, { ...o, limit: o.quiet ? items.length : limit }))])) as Record<Mode, StoreView[]>;
-    const storesByMode = Object.fromEntries(MODE_ORDER.map((m) => [m, ranked[m].slice(0, limit)])) as Record<Mode, StoreView[]>;
-    const bucket = o.at != null ? timeBucket(o.at) : undefined;
-    const quietByMode = o.quiet
-      ? (Object.fromEntries(
-          MODE_ORDER.map((m) => [m, ranked[m].slice(limit).filter((s) => !s.busyTime || s.busyTime !== bucket).slice(0, limit)]),
-        ) as Record<Mode, StoreView[]>)
-      : undefined;
-    return { live: true, label: labelOf(placeInput, place), center: { lat: place.lat, lng: place.lng }, region: place.region, storesByMode, quietByMode };
+    const limit = o.full ? items.length : (o.limit ?? 10);
+    const storesByMode = Object.fromEntries(MODE_ORDER.map((m) => [m, toViews(rankForMode(items, m, { ...o, limit }))])) as Record<Mode, StoreView[]>;
+    return { live: true, label: labelOf(placeInput, place), center: { lat: place.lat, lng: place.lng }, region: place.region, storesByMode };
   } catch (e) {
     if (e instanceof PlaceNotFound) {
       return { live: false, notFound: true, label, storesByMode: Object.fromEntries(MODE_ORDER.map((m) => [m, []])) as unknown as Record<Mode, StoreView[]>, error: e.message };
