@@ -63,7 +63,6 @@ export default function StoreCard({
         <RankBadge store={store} />
       </div>
       <div className="flex flex-wrap gap-1.5">
-        {store.fan && <Tag>{store.fan}이 많이 가요</Tag>}
         {store.tags.map((x) => <Tag key={x}>{x}</Tag>)}
         {highlight && <Tag blue>{highlight}</Tag>}
       </div>

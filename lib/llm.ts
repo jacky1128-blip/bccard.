@@ -7,7 +7,7 @@ import { cacheLife } from 'next/cache';
 import type { EatplItem } from '@/types/eatpl';
 import type { Mode } from '@/types/group';
 import { MODES } from './modes';
-import { fanLabel, isAllDay, roundHalfHour } from './view';
+import { isAllDay, roundHalfHour } from './view';
 
 // 짧은 문장 몇 줄이라 가장 싼 Haiku 로 충분 (Opus 5.5 대비 약 1/40 가격)
 const MODEL = process.env.LLM_MODEL || 'claude-haiku-5-5';
@@ -24,9 +24,9 @@ export type ReasonContext = {
 
 // 모델에 넘기는 값: 근거로 쓸 수 있는 잇플 필드 + 계산한 거리만 (가게명·주소·전화번호·좌표·링크 제외)
 // merTpbuzNm, allSaleRnk, ccgSaleRnk, loclPrsnPpltYn, empyVsitYn, frnrVsitYn, srtTime, endTime,
-// hldyDwk, congestionDwk, congestionTizn, vistCstmrRnkList, 도보 분
+// hldyDwk, congestionDwk, congestionTizn, 도보 분
+// 주요 고객층(vistCstmrRnkList)은 BC카드 결제 기준이라 50~60대로 쏠려 서비스 사용자(20~30대)와 안 맞아 넘기지 않음
 function facts(it: EatplItem, i: number) {
-  const fans = [it.vistCstmrRnkList?.rk01, it.vistCstmrRnkList?.rk02, it.vistCstmrRnkList?.rk03].map(fanLabel).filter(Boolean);
   return {
     id: `s${i + 1}`,
     업종: it.merTpbuzNm ?? null,
@@ -39,14 +39,13 @@ function facts(it: EatplItem, i: number) {
     결제가_가장_몰리는_요일: it.congestionDwk ?? null,
     결제가_가장_몰리는_시간대: it.congestionTizn ?? null,
     휴무_요일: it.hldyDwk?.length ? it.hldyDwk : null,
-    주요_고객층: fans.length ? fans : null,
     도보_분: it._walkMin ?? null,
   };
 }
 
 const SYSTEM = `너는 BC카드 결제 데이터(잇플)로 고른 식당 후보에 "왜 이 상황에 맞는지" 한국어로 짧게 설명하는 역할이다.
 규칙:
-- 근거는 각 가게에 주어진 필드뿐이다(업종, 지역·전국 매출 상위 %, 동네맛집, 회식 적합, 외국인 방문 많음, 영업 예상 시간, 휴무 요일, 결제가 가장 몰리는 요일·시간대, 주요 고객층, 도보 분).
+- 근거는 각 가게에 주어진 필드뿐이다(업종, 지역·전국 매출 상위 %, 동네맛집, 회식 적합, 외국인 방문 많음, 영업 예상 시간, 휴무 요일, 결제가 가장 몰리는 요일·시간대, 도보 분). 손님 연령·성별은 말하지 않는다.
 - 실시간 혼잡("지금 한산해요", "바로 앉을 수 있어요" 등), 메뉴, 좌석·룸·단체석, 가격, 맛 평가는 절대 쓰지 않는다. 분위기, 주차, 예약, 리뷰, 별점도 쓰지 않는다.
 - 붐비는 정보는 "최근 1개월 결제가 가장 몰리는 요일·시간대"라는 뜻이다. 지금 붐비는지/한산한지 단정하지 않는다.
 - 동네맛집이 false라고 "현지인이 적다", 외국인 방문이 false라고 "현지인이 많다"처럼 반대로 추론하지 않는다.

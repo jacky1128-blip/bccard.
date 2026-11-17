@@ -3,7 +3,7 @@
 import type { EatplItem } from '@/types/eatpl';
 import type { Mode } from '@/types/group';
 import { timeBucket, toMinutes } from './time';
-import { buildTags, fanLabel, isAllDay, likelyOpenAt, UNSURE_CLOSE, UNSURE_OPEN } from './view';
+import { buildTags, isAllDay, likelyOpenAt, UNSURE_CLOSE, UNSURE_OPEN } from './view';
 
 // 한 끼 서비스라 식사가 아닌 업종은 뺌
 const NOT_MEAL = /카페|커피|디저트|베이커리|제과|빵|아이스크림|빙수|음료|주스|차 ?전문|떡집|편의점|도넛|와플|케이크|마카롱/;
@@ -15,6 +15,20 @@ export const PARTY_FIT = /고기구이|곱창|막창|족발|보쌈|전골|샤브
 export const PARTY_NO = /버거|피자|김밥|분식|떡볶이|샌드위치|토스트|도시락|죽|샐러드|브런치|돈가스|돈까스|라멘|국수|면\/만두|마라탕|식품소매|패스트푸드/;
 const partyFit = (it: EatplItem) => PARTY_FIT.test(it.merTpbuzNm ?? '');
 const partyNo = (it: EatplItem) => PARTY_NO.test(it.merTpbuzNm ?? '');
+
+// 잇플 매출 순위는 BC카드 결제 기준이라 50~60대 단골 가게(국밥·감자탕 등)가 위로 쏠림.
+// 서비스 사용자는 20~30대 → 주요 고객층 1~3위로 순위만 조정 (화면에는 연령을 안 보여줌)
+// 2: 1위가 20·30대 / 1: 2~3위에 20·30대 / 0: 그 밖 / -1: 1~3위가 모두 50대 이상
+const YOUNG = /^(20|30)대/;
+const OLD = /^(50|60)대/;
+export function youthFit(it: EatplItem): number {
+  const rk = it.vistCstmrRnkList;
+  const list = [rk?.rk01, rk?.rk02, rk?.rk03].filter((x): x is string => !!x);
+  if (!list.length) return 0;
+  if (YOUNG.test(list[0])) return 2;
+  if (list.some((x) => YOUNG.test(x))) return 1;
+  return list.every((x) => OLD.test(x)) ? -1 : 0;
+}
 
 // 못 먹는 거 → 빼는 업종 (업종 이름만으로 판단, 메뉴 정보는 없음)
 export const CANT_RULES: Record<string, RegExp> = {
@@ -69,6 +83,7 @@ function score(it: EatplItem, idx: number, o: PickOptions) {
   const walk = it._walkMin ?? 10;
   if (walk > 10) s += Math.ceil((walk - 10) / 5) * 3;
   if (isBusyAt(it, o.at, o.day)) s += 5;
+  s -= youthFit(it) * 6; // 20·30대 1위 -12 · 2~3위 -6 · 모두 50대 이상 +6
   if (o.mode === 'party') {
     if (partyFit(it)) s -= 10;
     if (it.empyVsitYn && !partyNo(it)) s -= 8;
@@ -117,8 +132,6 @@ export function ruleReason(it: EatplItem, o: { mode: Mode; at?: number; day?: st
         : `결제가 가장 몰리는 때는 ${it.congestionDwk ? `${it.congestionDwk}요일 ` : ''}${it.congestionTizn}${iEyo(it.congestionTizn)}.`,
     );
   }
-  const fan = fanLabel(it.vistCstmrRnkList?.rk01);
-  if (fan && parts.length < 3) parts.push(`${fan} 손님이 가장 많아요.`);
   return parts.slice(0, 3).join(' ');
 }
 
@@ -133,7 +146,9 @@ export function rankForMode(items: EatplItem[], mode: Mode, o: { at?: number; da
       ((mode === 'travel' || mode === 'meal') && it.loclPrsnPpltYn ? -1 : 0) +
       (mode === 'event' && !isAllDay(it.srtTime, it.endTime) && (toMinutes(it.endTime) ?? 0) <= (toMinutes(it.srtTime) ?? 0) ? -1 : 0) +
       // 오늘 밥 한 끼 · 여행은 술집·주류판매점을 뒤로 (식사 목록이라서)
-      ((mode === 'meal' || mode === 'travel') && CANT_RULES['술 못 마심'].test(it.merTpbuzNm ?? '') ? 2 : 0);
+      ((mode === 'meal' || mode === 'travel') && CANT_RULES['술 못 마심'].test(it.merTpbuzNm ?? '') ? 2 : 0) -
+      // 20·30대가 많이 가는 곳을 앞으로, 1~3위가 모두 50대 이상이면 뒤로
+      youthFit(it);
     return boost(a) - boost(b); // 같은 그룹 안에서는 원래 매출 순서 유지 (stable sort)
   });
   return sorted.slice(0, o.limit ?? 10).map((it) => ({ ...it, _tags: buildTags(it, { mode, at: o.at, day: o.day, now: o.now, peers: items }), _reason: ruleReason(it, { mode, at: o.at, day: o.day }), _reasonBy: 'rule' as const }));
