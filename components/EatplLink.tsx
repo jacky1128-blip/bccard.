@@ -14,11 +14,13 @@ export default function EatplLink({
   name,
   variant = 'primary',
   label = '메뉴 보기',
+  onOpen,
 }: {
   url: string; // merUrl 그대로. 절대 가공하지 말 것
   name: string;
   variant?: keyof typeof STYLES;
   label?: string;
+  onOpen?: () => void; // 메뉴를 열었을 때 (투표 잠금 해제 등)
 }) {
   return (
     <a
@@ -29,6 +31,7 @@ export default function EatplLink({
       onClick={(e) => {
         if (!url) e.preventDefault();
         track('eatpl_click', { name });
+        onOpen?.();
       }}
       className={STYLES[variant]}
     >

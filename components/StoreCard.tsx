@@ -41,6 +41,7 @@ export default function StoreCard({
   highlight,
   menuLabel = '메뉴 보기',
   action,
+  onMenuOpen,
 }: {
   store: StoreView;
   showRank?: boolean;
@@ -49,6 +50,7 @@ export default function StoreCard({
   highlight?: string;         // 파란 칩 ("01:00까지", "12:30 영업 중")
   menuLabel?: string;
   action?: React.ReactNode;   // 메뉴 버튼 옆 버튼 (투표)
+  onMenuOpen?: () => void;    // 메뉴 버튼을 눌렀을 때
 }) {
   return (
     <div className="flex flex-col gap-2.5 rounded-2xl border border-line p-4">
@@ -69,7 +71,7 @@ export default function StoreCard({
       {reason && <AiReason text={store.reason} by={store.reasonBy} />}
       {action ? (
         <div className="grid grid-cols-2 gap-2">
-          <EatplLink url={store.url} name={store.name} label={menuLabel} />
+          <EatplLink url={store.url} name={store.name} label={menuLabel} onOpen={onMenuOpen} />
           {action}
         </div>
       ) : (

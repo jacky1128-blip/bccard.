@@ -144,6 +144,23 @@ export default function GroupRoom({ initial, live }: { initial: GroupState; live
     actions.changePlace(midTarget);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [midTarget, g.place]);
+  // 메뉴를 열어 본 가게만 투표 가능 (새로고침해도 유지되게 모임별로 저장)
+  const seenKey = `babplan:menu-seen:${g.id}`;
+  const [seen, setSeen] = useState<string[]>([]);
+  useEffect(() => {
+    try {
+      setSeen(JSON.parse(localStorage.getItem(seenKey) ?? '[]'));
+    } catch {}
+  }, [seenKey]);
+  const markSeen = (key: string) =>
+    setSeen((prev) => {
+      if (prev.includes(key)) return prev;
+      const next = [...prev, key];
+      try {
+        localStorage.setItem(seenKey, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
   const joined = g.participants.map((p) => p.name);
   const left = Math.max(0, g.need - joined.length);
   const step: Step = !g.me.joined ? 'join' : g.status === 'waiting' ? 'lock' : g.status === 'voting' ? 'vote' : 'done';
@@ -318,6 +335,7 @@ export default function GroupRoom({ initial, live }: { initial: GroupState; live
           <div className="flex flex-col gap-3 md:grid md:grid-cols-3 md:items-stretch">
           {g.stores.map((s) => {
             const mine = g.me.vote === s.key;
+            const locked = !mine && !seen.includes(s.key);
             return (
               <StoreCard
                 key={s.key}
@@ -325,9 +343,17 @@ export default function GroupRoom({ initial, live }: { initial: GroupState; live
                 showWalk={false}
                 reason
                 menuLabel="메뉴 확인하기"
+                onMenuOpen={() => markSeen(s.key)}
                 action={
-                  <button type="button" aria-pressed={mine} disabled={busy} onClick={() => actions.vote(s.key)} className={mine ? btn.mdSelected : btn.mdOutline}>
-                    {mine ? `투표함 · ${g.votes[s.key] ?? 0}표` : `투표 · ${g.votes[s.key] ?? 0}표`}
+                  <button
+                    type="button"
+                    aria-pressed={mine}
+                    disabled={busy || locked}
+                    title={locked ? '메뉴를 먼저 확인해 주세요' : undefined}
+                    onClick={() => actions.vote(s.key)}
+                    className={`${mine ? btn.mdSelected : btn.mdOutline} disabled:cursor-not-allowed disabled:opacity-40`}
+                  >
+                    {locked ? '메뉴 먼저 확인' : mine ? `투표함 · ${g.votes[s.key] ?? 0}표` : `투표 · ${g.votes[s.key] ?? 0}표`}
                   </button>
                 }
               />
