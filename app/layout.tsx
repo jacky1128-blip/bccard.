@@ -22,6 +22,8 @@ export const metadata: Metadata = {
   },
   title: { default: `${SERVICE_NAME} · ${SERVICE_TAGLINE}`, template: `%s · ${SERVICE_NAME}` },
   description: "BC카드 eat.pl 잇플 결제 데이터로 지금 갈 만한 곳을 찾고, 친구들과 같이 정해요.",
+  // 아이폰 '홈 화면에 추가' 시 주소창 없이 열리고, 아이콘 아래 이름은 밥콕 (manifest 는 app/manifest.ts)
+  appleWebApp: { capable: true, title: SERVICE_NAME, statusBarStyle: "default" },
 };
 
 // GA4 측정 ID (G-XXXX). 형식이 맞을 때만 태그를 넣음
