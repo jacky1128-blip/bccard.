@@ -15,12 +15,14 @@ export default function EatplLink({
   variant = 'primary',
   label = '메뉴 보기',
   onOpen,
+  source,
 }: {
   url: string; // merUrl 그대로. 절대 가공하지 말 것
   name: string;
   variant?: keyof typeof STYLES;
   label?: string;
   onOpen?: () => void; // 메뉴를 열었을 때 (투표 잠금 해제 등)
+  source?: string;     // 어느 화면에서 눌렀는지 (GA · 예: "guide:gangnam-hoesik")
 }) {
   return (
     <a
@@ -30,7 +32,7 @@ export default function EatplLink({
       rel="noopener"
       onClick={(e) => {
         if (!url) e.preventDefault();
-        track('eatpl_click', { name });
+        track('eatpl_click', source ? { name, source } : { name });
         onOpen?.();
       }}
       className={STYLES[variant]}

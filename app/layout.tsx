@@ -10,7 +10,16 @@ import { NavTracker } from "@/components/BackLink";
 // 넥슨 Lv1 고딕 Bold (넥슨 무료 글꼴, 상업적 사용 가능). globals.css 의 --font-display 가 이 변수를 씀
 const nexon = localFont({ src: "./fonts/NEXONLv1GothicBold.woff", weight: "700", display: "swap", variable: "--font-nexon" });
 
+// 검색용 대표 주소(canonical)·공유 미리보기의 기준 주소. 없으면 상대 주소 그대로
+const SITE = (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/+$/, "");
+
 export const metadata: Metadata = {
+  ...(/^https?:\/\/[^/]+/.test(SITE) ? { metadataBase: new URL(SITE) } : {}),
+  // 구글 서치 콘솔·네이버 서치어드바이저 소유 확인 (HTML 태그 방식의 content 값만 Vercel 환경변수에)
+  verification: {
+    ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ? { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION } : {}),
+    ...(process.env.NEXT_PUBLIC_NAVER_SITE_VERIFICATION ? { other: { "naver-site-verification": process.env.NEXT_PUBLIC_NAVER_SITE_VERIFICATION } } : {}),
+  },
   title: { default: `${SERVICE_NAME} · ${SERVICE_TAGLINE}`, template: `%s · ${SERVICE_NAME}` },
   description: "BC카드 eat.pl 잇플 결제 데이터로 지금 갈 만한 곳을 찾고, 친구들과 같이 정해요.",
 };

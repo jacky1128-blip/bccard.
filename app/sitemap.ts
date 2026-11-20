@@ -2,6 +2,7 @@
 import type { MetadataRoute } from 'next';
 import { STATIONS, stationLabel } from '@/lib/midpoint';
 import { MODE_ORDER } from '@/lib/modes';
+import { GUIDES } from '@/lib/guides';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const site = (process.env.NEXT_PUBLIC_SITE_URL ?? '').replace(/\/+$/, '');
@@ -9,6 +10,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: `${site}/`, changeFrequency: 'daily', priority: 1 },
     { url: `${site}/ranking`, changeFrequency: 'daily', priority: 0.8 },
+    { url: `${site}/guide`, changeFrequency: 'weekly', priority: 0.8 },
+    ...GUIDES.map((g) => ({ url: `${site}/guide/${g.slug}`, changeFrequency: 'daily' as const, priority: 0.8 })),
     ...STATIONS.flatMap((s) =>
       MODE_ORDER.filter((m) => m !== 'travel').map((m) => ({
         url: `${site}/r/${encodeURIComponent(stationLabel(s.name))}/${m}`,
