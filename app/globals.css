@@ -133,11 +133,3 @@ input[type="date"]::-webkit-date-and-time-value {
   min-width: 0;
 }
 
-/* 첫 방문 안내(components/Onboarding): 장이 바뀔 때 살짝 올라오며 나타남 */
-@keyframes intro {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: none; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .animate-\[intro_\.35s_ease-out\] { animation: none; }
-}

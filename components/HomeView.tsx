@@ -13,7 +13,6 @@ import MapView from './MapView';
 import ModeChips, { syncModeToUrl } from './ModeChips';
 import { TopRow } from './StoreRow';
 import DemoNote from './DemoNote';
-import Onboarding, { introSeen } from './Onboarding';
 import { Brand, btn, t } from './ui';
 
 const MAP_TOP = 172; // 모바일 지도 위 검색창·질문·상황 칩 높이
@@ -129,16 +128,9 @@ export default function HomeView({
     );
   };
 
-  // 첫 방문 안내: 저장소는 브라우저에서만 읽을 수 있어서 처음엔 null(모름) → 읽고 나서 보일지 정함
-  const [intro, setIntro] = useState<boolean | null>(null);
-  useEffect(() => {
-    queueMicrotask(() => setIntro(!introSeen()));
-  }, []);
-
   // 처음 열었을 때(장소 지정 없음) 바로 내 위치로. 권한 거부·실패하면 기본 위치(역삼역) 그대로 + 안내
-  // 안내를 보는 중이면 다 볼 때까지 기다림 (설명 없이 권한 창부터 뜨지 않게)
   useEffect(() => {
-    if (!defaultPlace || intro !== false) return;
+    if (!defaultPlace) return;
     if (!('geolocation' in navigator)) {
       queueMicrotask(() => setGeoFail(true));
       return;
@@ -158,7 +150,7 @@ export default function HomeView({
     return () => {
       alive = false;
     };
-  }, [defaultPlace, initialMode, router, intro]);
+  }, [defaultPlace, initialMode, router]);
 
   // 검색창 + 내 위치 + 상황 질문·칩 (모바일은 지도 위에 띄우고, 태블릿·PC 는 왼쪽 패널 맨 위)
   const controls = (
@@ -194,7 +186,6 @@ export default function HomeView({
 
   return (
     <main className="relative h-dvh w-full overflow-hidden bg-white md:flex md:flex-row-reverse">
-      {intro && <Onboarding onDone={() => setIntro(false)} />}
       <MapView
         stores={top3}
         center={center}
