@@ -38,7 +38,9 @@ export const t = {
  *  chip 36px · 알약 모양 선택 칩
  * 새 버튼도 여기서 골라 쓰기 (높이·굵기 덮어쓰기 금지)
  */
-const LABEL = 'font-display text-[14px] leading-none no-underline transition disabled:opacity-40';
+// 누르는 순간 살짝 작아짐 (눌림 반응). 비활성·움직임 줄이기 설정이면 안 함
+const PRESS = 'active:scale-[0.96] disabled:active:scale-100 motion-reduce:active:scale-100';
+const LABEL = `font-display text-[14px] leading-none no-underline transition duration-150 ease-out ${PRESS} disabled:opacity-40`;
 const LG = `flex h-14 w-full items-center justify-center rounded-2xl ${LABEL}`;
 const MD = `flex h-12 w-full items-center justify-center rounded-xl ${LABEL}`;
 // 36px 버튼·칩은 보이는 크기는 그대로, 누르는 영역만 위아래로 늘려 44px 확보
@@ -55,6 +57,11 @@ export const btn = {
   smPrimary: `${SM} bg-primary text-white hover:brightness-110`,
   smSoft: `${SM} bg-primary-soft text-primary-ink hover:brightness-95`,
   smOutline: `${SM} border border-line-2 bg-white text-ink hover:bg-fill`,
+  // 잇플 메뉴 보기 전용 코랄 (꽉 찬 · 그라데이션 · 연한 · 글자)
+  mdAccent: `${MD} bg-accent text-white hover:brightness-105`,
+  lgAccentGrad: `${LG} bg-gradient-to-r from-accent-from to-accent-to text-white shadow-[0_6px_16px_rgba(220,96,121,0.28)] hover:brightness-105`,
+  smAccentSoft: `${SM} bg-accent-soft text-accent-ink hover:brightness-95`,
+  textAccent: `${LABEL} relative whitespace-nowrap text-accent-ink after:absolute after:-inset-x-1 after:-inset-y-3 after:content-['']`,
   textLink: `${LABEL} relative whitespace-nowrap text-primary-ink after:absolute after:-inset-x-1 after:-inset-y-3 after:content-['']`,
   pillOn: `${CHIP} border-[1.5px] border-primary bg-primary text-white`,
   pillOff: `${CHIP} border border-line bg-white text-ink hover:bg-fill`,

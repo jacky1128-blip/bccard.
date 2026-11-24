@@ -13,6 +13,7 @@ import MapView from './MapView';
 import ModeChips, { syncModeToUrl } from './ModeChips';
 import { TopRow } from './StoreRow';
 import DemoNote from './DemoNote';
+import EatplLink from './EatplLink';
 import { Brand, btn, t } from './ui';
 
 const MAP_TOP = 172; // 모바일 지도 위 검색창·질문·상황 칩 높이
@@ -78,7 +79,8 @@ export default function HomeView({
     measure();
     return () => ro.disconnect();
   }, []);
-  const snaps = { peek: 236, half: Math.max(300, Math.min(vh - 230, natural)), full: Math.max(320, vh - 64) };
+  // 접힘 높이: 머리(매출 1위 바로 보기 포함) + 아래 추천 버튼이 다 보이게
+  const snaps = { peek: top3.length ? 304 : 236, half: Math.max(300, Math.min(vh - 230, natural)), full: Math.max(320, vh - 64) };
   const [snap, setSnap] = useState<keyof typeof snaps>('half');
   const [dragH, setDragH] = useState<number | null>(null);
   const drag = useRef<{ y: number; h: number; moved: boolean } | null>(null);
@@ -110,6 +112,8 @@ export default function HomeView({
     setDragH(null);
   };
   const place = placeLabel ?? m.place;
+  const nearLabel = placeLabel === '내 위치' || !placeLabel ? '내 주변' : `${place} 근처`;
+  const top1 = top3[0];
   const placeQs = placeLabel ? `&place=${encodeURIComponent(placeLabel === '내 위치' && center ? `${center.lat},${center.lng}` : placeLabel)}` : '';
 
   // 내 위치 → 좌표를 장소로 넘기면 서버가 행정구역으로 바꿔 그 동네 결제 순위를 보여줌
@@ -229,11 +233,21 @@ export default function HomeView({
           {/* 위: 장소 + TOP 3 (작은 파란 글씨) / 큰 제목: 상황마다 바뀜 (혼자·여럿이 구분) */}
           <div className="flex flex-col gap-1.5">
             <div className="flex items-baseline justify-between gap-2">
-              <span className={`min-w-0 truncate ${t.kicker}`}>{placeLabel === '내 위치' || !placeLabel ? '내 주변' : `${place} 근처`} 결제 많은 가게 TOP 3</span>
+              <span className={`min-w-0 truncate ${t.kicker}`}>{nearLabel} 결제 많은 가게 TOP 3</span>
               <Link href={`/ranking?mode=${mode}${placeQs}`} className={`shrink-0 ${btn.textLink}`}>전체 순위 보기</Link>
             </div>
             <h2 className={t.sheetTitle}>{m.homeTitle}</h2>
           </div>
+          {/* 바로 잇플: 이 동네·이 상황 매출 1위 가게의 잇플 메뉴 화면을 곧장 엶 (시트 맨 위, 제일 먼저 보이게) */}
+          {top1 && (
+            <EatplLink
+              url={top1.url}
+              name={top1.name}
+              variant="hero"
+              source={`home:top1:${mode}`}
+              label={<span className="truncate px-3">{nearLabel} 매출 1위 맛집 메뉴 바로 보기</span>}
+            />
+          )}
         </div>
 
         {/* 목록: 시트 높이 안에서 스크롤 */}
