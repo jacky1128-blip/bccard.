@@ -274,6 +274,11 @@ export default function HomeView({
               </div>
             ))}
           </div>
+          {/* 검색·AI 검색이 가이드와 도움말을 따라 들어갈 수 있게 (목록 맨 아래 작은 링크) */}
+          <nav aria-label="더 보기" className={`flex gap-3 pb-2 ${t.desc}`}>
+            <Link href="/guide" className="text-sub">동네별 맛집 가이드</Link>
+            <Link href="/faq" className="text-sub">자주 묻는 질문</Link>
+          </nav>
          </div>
         </div>
 
