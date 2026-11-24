@@ -266,3 +266,55 @@ export async function changePlace(id: string, body: Record<string, unknown>) {
   return getGroupState(id, token);
 }
 
+
+/* ---------- 공개 결과 페이지 (/s/[id]) · 검색·AI 검색용 ----------
+ * 확정된 모임만, 사람을 알아볼 수 있는 값(모임 이름·메모·닉네임·출발역)은 빼고
+ * 장소·상황·인원·가게·표 수만 공개. 단톡용 모임 방(/g/[id])은 그대로 검색 제외
+ */
+export type PublicResult = {
+  id: string;
+  mode: Mode;
+  place: string;
+  when: string;
+  date?: string;          // 만난 날 'YYYY-MM-DD'
+  headcount: number;
+  joined: number;         // 실제 들어온 사람 수
+  totalVotes: number;
+  winner: GroupState['stores'][number];
+  ranked: { store: GroupState['stores'][number]; votes: number }[];
+};
+
+export async function getPublicResult(id: string): Promise<PublicResult | null> {
+  if (!/^[a-z0-9]{4,12}$/.test(id)) return null;
+  let x: Awaited<ReturnType<typeof load>>;
+  try {
+    x = await load(id);
+  } catch (e) {
+    if (e instanceof GroupError && e.status === 404) return null;
+    throw e;
+  }
+  if (x.group.status !== 'confirmed') return null;
+  const s = toState(x, null);
+  const ranked = [...s.stores]
+    .map((store) => ({ store, votes: s.votes[store.key] ?? 0 }))
+    .sort((a, b) => b.votes - a.votes || a.store.rank - b.store.rank);
+  const winner = s.stores.find((st) => st.key === s.confirmedKey) ?? ranked[0]?.store;
+  if (!winner) return null;
+  return {
+    id: s.id, mode: s.mode, place: s.place, when: s.when,
+    date: x.group.meet_date ? String(x.group.meet_date).slice(0, 10) : undefined,
+    headcount: s.headcount, joined: x.participants.length, totalVotes: s.totalVotes, winner, ranked,
+  };
+}
+
+// 사이트맵용: 최근 확정된 모임 (DB 없거나 실패하면 빈 목록)
+export async function listPublicResults(limit = 500): Promise<{ id: string; created_at: string }[]> {
+  try {
+    return await sql<{ id: string; created_at: string }>(
+      `select id, created_at from groups where status = 'confirmed' order by created_at desc limit $1`,
+      [limit],
+    );
+  } catch {
+    return [];
+  }
+}

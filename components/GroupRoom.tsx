@@ -407,7 +407,8 @@ export default function GroupRoom({ initial, live }: { initial: GroupState; live
       <div className="flex flex-col gap-2">
         <SectionTitle>다른 사람에게도 공유하기</SectionTitle>
         <span className={t.desc}>“우리는 결제 데이터로 여기 골랐어요” · 받은 사람도 바로 써볼 수 있어요</span>
-        <ShareButtons url={shareUrl} title={`${g.title} · ${winner?.name ?? ''}`} text={`${g.when} ${winner?.name ?? ''}로 정했어요 · 결제 데이터로 고른 곳`} />
+        {/* 바깥 공유는 공개 결과 페이지(/s/[id] · 모임 이름·닉네임 없이 결과만). 데모 모드는 지금 주소 그대로 */}
+        <ShareButtons url={() => (live && typeof window !== 'undefined' ? `${window.location.origin}/s/${g.id}` : shareUrl())} title={`${g.place} 모임 · ${winner?.name ?? ''}`} text={`${g.when} ${winner?.name ?? ''}로 정했어요 · 결제 데이터로 고른 곳`} />
       </div>
       <div className="flex flex-col gap-2">
         <SectionTitle>방장이 되어 다음 모임을 만들 수 있어요</SectionTitle>

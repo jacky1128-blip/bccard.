@@ -6,6 +6,7 @@ import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 import "./globals.css";
 import { SERVICE_NAME, SERVICE_TAGLINE } from "@/components/ui";
 import { NavTracker } from "@/components/BackLink";
+import JsonLd from "@/components/JsonLd";
 
 // 넥슨 Lv1 고딕 Bold (넥슨 무료 글꼴, 상업적 사용 가능). globals.css 의 --font-display 가 이 변수를 씀
 const nexon = localFont({ src: "./fonts/NEXONLv1GothicBold.woff", weight: "700", display: "swap", variable: "--font-nexon" });
@@ -41,6 +42,22 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <NavTracker />
           {children}
         </div>
+        {/* 서비스 자체 소개 (구글·네이버·AI 검색이 "밥콕이 뭔지" 알게) */}
+        <JsonLd
+          data={{
+            '@context': 'https://schema.org',
+            '@type': 'WebApplication',
+            name: SERVICE_NAME,
+            alternateName: 'Babkok',
+            ...(/^https?:\/\/[^/]+/.test(SITE) ? { url: SITE } : {}),
+            applicationCategory: 'LifestyleApplication',
+            operatingSystem: 'Web',
+            inLanguage: 'ko',
+            description: 'BC카드 eat.pl(잇플) 결제 데이터로 지금 갈 만한 식당을 고르고, 친구들과 링크 하나로 투표해 모임 장소를 정하는 무료 웹 서비스',
+            featureList: ['동네·역별 결제 매출 순위', '회식·모임 장소 추천', '친구들과 모임 장소 투표', '중간 지점 역 추천', '경기·공연 끝나고 갈 식당', '여행지 현지인 맛집'],
+            offers: { '@type': 'Offer', price: '0', priceCurrency: 'KRW' },
+          }}
+        />
         {GA_ID && (
           <>
             <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
